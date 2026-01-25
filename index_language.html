@@ -1,0 +1,1494 @@
+<!DOCTYPE html>
+<html lang="de" data-theme="system">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <script src="https://code.iconify.design/iconify-icon/2.1.0/iconify-icon.min.js" defer></script>
+
+  <style>
+    :root{
+      --bg: #0b0d10;
+      --panel: #12161c;
+      --panel-2:#171c23;
+      --text:#e6ebf1;
+      --muted:#aab2bf;
+      --red:#ef4444; --yellow:#f59e0b; --green:#22c55e; --blue:#3b82f6;
+      --card-radius:16px; --shadow:0 6px 30px rgba(0,0,0,.25);
+      --border:#1f2631; --border-alt:#2a3341; --chip-bg:#12161c;
+    }
+    html[data-theme="light"]{
+      --bg:#f5f7fb; --panel:#ffffff; --panel-2:#f8fafc; --text:#0f172a; --muted:#475569;
+      --border:#e2e8f0; --border-alt:#cbd5e1; --shadow:0 8px 28px rgba(15,23,42,.08); --chip-bg:#f8fafc;
+    }
+    @media (prefers-color-scheme: light){
+      html[data-theme="system"]{
+        --bg:#f5f7fb; --panel:#ffffff; --panel-2:#f8fafc; --text:#0f172a; --muted:#475569;
+        --border:#e2e8f0; --border-alt:#cbd5e1; --shadow:0 8px 28px rgba(15,23,42,.08); --chip-bg:#f8fafc;
+      }
+    }
+    html,body{height:100%}
+    body{margin:0;font-family:ui-sans-serif,system-ui,-apple-system,Segoe UI,Roboto,"Helvetica Neue",Arial,"Noto Sans";background:var(--bg);color:var(--text)}
+    .wrap{max-width:1500px;margin:0 auto;padding:24px}
+    header{display:flex;gap:16px;align-items:center;justify-content:space-between;flex-wrap:wrap;margin-bottom:16px}
+    .controls{display:flex;gap:10px;align-items:center;flex-wrap:wrap}
+    .chip{background:var(--chip-bg);border:1px solid var(--border);border-radius:999px;padding:8px 12px;display:flex;gap:8px;align-items:center}
+    .chip select,.chip input[type="text"]{background:transparent;border:none;outline:none;color:var(--text)}
+    .chip input::placeholder{color:var(--muted)}
+    .btn{background:var(--panel-2);border:1px solid var(--border);border-radius:999px;padding:8px 14px;display:flex;gap:8px;align-items:center;cursor:pointer;font-weight:600;color:var(--text);transition:background .2s,color .2s,border-color .2s}
+    .btn:hover{background:var(--blue);border-color:var(--blue);color:#fff}
+    .area{margin-top:24px;border-top:1px solid var(--border)}
+    .area-header{display:flex;align-items:center;justify-content:space-between;gap:8px;padding:10px 4px;position:sticky;top:0;background:var(--bg);z-index:5}
+    .area-toggle{display:flex;align-items:center;gap:8px;cursor:pointer;user-select:none}
+    .area-title{font-size:18px;font-weight:700;letter-spacing:.2px;display:flex;align-items:center;gap:8px}
+    .badge{font-size:12px;color:var(--muted);border:1px solid var(--border-alt);border-radius:999px;padding:2px 8px}
+    .chev{transition:transform .2s ease}
+    .collapsed .chev{transform:rotate(-90deg)}
+   .grid {
+  display: grid;
+  gap: 14px;
+  /* Maximale Breite der Kacheln automatisch anpassen */
+  grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+  /* Nutzung der gesamten Bildschirmbreite */
+  width: 100%;
+  /* Optional: Zentrieren des gesamten Grids, falls gewünscht */
+  justify-items: center;
+}
+    .grid.is-collapsed{display:none}
+    .card{background:linear-gradient(180deg,var(--panel),var(--panel-2));border:1px solid var(--border);border-radius:var(--card-radius);box-shadow:var(--shadow);display:flex;flex-direction:column;padding:10px;gap:8px;position:relative;overflow:hidden}
+    .card .top{display:flex;gap:10px;align-items:center}
+    .icn{width:42px;height:42px;border-radius:12px;display:grid;place-items:center;background:var(--bg);border:1px solid var(--border);cursor:pointer;position:relative}
+    .icn:hover{box-shadow:0 0 0 2px var(--blue) inset}
+    .icn.pulse{animation:pulse .8s ease}
+    @keyframes pulse{0%{transform:scale(1)}50%{transform:scale(1.08)}100%{transform:scale(1)}}
+    .icn iconify-icon{font-size:22px}
+    .task{font-weight:700}
+    .meta{display:flex;flex-wrap:wrap;gap:6px;margin-top:2px}
+    .pill{font-size:12px;color:var(--muted);border:1px dashed var(--border-alt);border-radius:999px;padding:2px 8px}
+    .row{display:flex;justify-content:space-between;gap:8px;font-size:13px;color:var(--muted)}
+    .row b{color:var(--text)}
+    .due{font-variant-numeric:tabular-nums}
+    .overdue{color:var(--red);font-weight:700}
+    .due-soon{color:var(--yellow);font-weight:600}
+    .ok{color:var(--green);font-weight:600}
+    .accent{position:absolute;left:0;top:0;bottom:0;width:4px}
+    .imp-red{background:var(--red)}
+    .imp-yellow{background:var(--yellow)}
+    .imp-green{background:var(--green)}
+    .imp-orange{background:orange}
+    .muted{color:var(--muted)}
+    .sr-only{position:absolute;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip:rect(0,0,0,0);white-space:nowrap;border:0}
+
+    dialog::backdrop{background:rgba(0,0,0,.45)}
+    dialog{border:1px solid var(--border);border-radius:16px;padding:16px;background:var(--panel);color:var(--text);box-shadow:var(--shadow)}
+    dialog input,dialog select{width:100%;box-sizing:border-box;padding:8px;border-radius:8px;border:1px solid var(--border);background:var(--panel-2);color:var(--text)}
+    dialog label{display:grid;gap:6px;font-size:13px;color:var(--muted)}
+
+    .card .edit-btn{position:absolute;right:10px;top:10px;border:1px solid var(--border);background:var(--panel-2);border-radius:10px;padding:6px;display:grid;place-items:center;cursor:pointer;opacity:.85;transition:opacity .15s,background .2s,border-color .2s}
+    .card .edit-btn:hover{opacity:1;background:var(--blue);border-color:var(--blue);color:#fff}
+
+    /* Icon-Picker */
+    .icon-picker-wrap{position:relative;display:grid;grid-template-columns:1fr auto;gap:6px;align-items:center}
+    .icon-preview{width:36px;height:36px;display:grid;place-items:center;border:1px solid var(--border);border-radius:10px;background:var(--panel-2)}
+    .icon-dd{position:absolute;z-index:50;top:100%;left:0;right:0;margin-top:6px;border:1px solid var(--border);border-radius:12px;background:var(--panel);box-shadow:var(--shadow);padding:8px;display:none}
+    .icon-dd.open{display:block}
+    .icon-dd .search{width:100%;padding:8px;border:1px solid var(--border);border-radius:8px;background:var(--panel-2);color:var(--text)}
+    .icon-list{margin-top:8px;max-height:260px;overflow:auto;display:grid;grid-template-columns:repeat(auto-fill,minmax(160px,1fr));gap:6px}
+    .icon-item{display:flex;gap:8px;align-items:center;padding:8px;border:1px solid var(--border);border-radius:10px;background:var(--panel-2);cursor:pointer}
+    .icon-item:hover{border-color:var(--blue)}
+    .icon-name{font-size:12px;color:var(--muted);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+
+    .hist-svg{width:100%;height:120px;display:block}
+    .hist-empty{color:var(--muted);font-size:13px}
+
+    .dlg-title{margin:0 0 12px;font-size:18px}
+    .dlg-grid{display:grid;gap:10px}
+    .dlg-actions-right{display:flex;gap:8px;justify-content:flex-end;margin-top:14px}
+    .dlg-actions-between{display:flex;gap:8px;justify-content:space-between;margin-top:14px}
+    .dlg-actions-inline{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+
+    .hist-wrap{margin-top:12px;padding-top:10px;border-top:1px solid var(--border);display:grid;gap:10px}
+    .hist-head{display:flex;align-items:center;justify-content:space-between;gap:8px}
+    .hist-list{margin:0;padding-left:18px;max-height:180px;overflow:auto}
+  </style>
+</head>
+
+<body>
+  <div class="wrap">
+    <header>
+      <div class="controls">
+
+        <label class="chip"><span id="lbl-language">Sprache:</span>
+          <select id="lang-select">
+              <option value="en">English</option>
+              <option value="de">Deutsch</option>
+          </select>
+        </label>
+
+        <label class="chip"><span id="lbl-view">Ansicht:</span>
+          <select id="view-select">
+            <option value="grouped" id="opt-view-grouped">Nach Bereichen</option>
+            <option value="flat" id="opt-view-flat">Alle Aufgaben</option>
+          </select>
+        </label>
+
+        <label class="chip"><span id="lbl-range">Zeitraum:</span>
+          <select id="range-select"></select>
+        </label>
+
+        <label class="chip"><span id="lbl-sort">Sortierung:</span>
+          <select id="sort-select">
+            <option value="due" id="opt-sort-due">Fälligkeit (bald → spät)</option>
+            <option value="alpha" id="opt-sort-alpha">Alphabetisch (Task)</option>
+          </select>
+        </label>
+
+        <label class="chip" style="min-width:220px">
+          <iconify-icon icon="mdi:magnify"></iconify-icon>
+          <input id="search-input" type="text" placeholder="Suche in Task/Bereich…" />
+        </label>
+
+        <button id="theme-btn" class="btn" title="Hell/Dunkel umschalten">
+          <iconify-icon id="theme-icn" icon="mdi:weather-night"></iconify-icon><span id="theme-label">Dunkel</span>
+        </button>
+
+        <button id="add-task-btn" class="btn" title="Neue Aufgabe anlegen">
+          <iconify-icon icon="mdi:plus-circle"></iconify-icon><span id="btn-new-task">Neue Aufgabe</span>
+        </button>
+      </div>
+
+      <button id="export-btn" class="btn sr-only" title="Aktualisierte Tabelle als .js exportieren">
+        <iconify-icon icon="mdi:download"></iconify-icon><span>Export (.js)</span>
+      </button>
+
+      <button id="ha-test" class="btn sr-only" title="Webhook-Test">Webhook-Test</button>
+    </header>
+
+    <div id="app"></div>
+  </div>
+
+  <script>
+    window.BASE_PATH = "/local/myownstuff/Putzplan/";
+    if(!window.TABLE_DATA){ window.TABLE_DATA = []; }
+
+    window.HA_ORIGIN = 'http://192.168.178.38:8123';
+    function getHaOrigin(){
+      return (window.top && window.top.location && /^https?:/.test(window.top.location.origin))
+        ? window.top.location.origin
+        : (typeof window.HA_ORIGIN === 'string' ? window.HA_ORIGIN : window.location.origin);
+    }
+
+    async function callWebhook(payload) {
+      const webhookUrl = `${getHaOrigin()}/api/webhook/putzplan_export`;
+      const res = await fetch(webhookUrl, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload)
+      });
+      const text = await res.text();
+      if (!res.ok) throw new Error(`Webhook ${res.status} – ${text}`);
+      return text || 'OK';
+    }
+
+    window.__ppExportInProgress = false;
+
+    function reloadUpdatedScriptAndRender(){
+      if(window.__ppExportInProgress) return;
+
+      const old = document.getElementById('data-js');
+      const fresh = document.createElement('script');
+      fresh.id = 'data-js';
+
+      const abs = new URL(window.BASE_PATH + "data.updated.js", getHaOrigin()).toString();
+      fresh.src = abs + '?v=' + Date.now();
+
+      fresh.onload = () => { window.ppRender?.(); };
+      fresh.onerror = () => { console.debug('data.updated.js konnte nicht geladen werden.'); };
+
+      if (old) old.replaceWith(fresh);
+      else document.head.appendChild(fresh);
+    }
+
+    function startReloadLoop(){
+      reloadUpdatedScriptAndRender();
+      setInterval(reloadUpdatedScriptAndRender, 1000*60*15);
+      window.addEventListener('focus', reloadUpdatedScriptAndRender);
+    }
+    if (document.readyState === 'loading') {
+      window.addEventListener('DOMContentLoaded', startReloadLoop, { once:true });
+    } else {
+      startReloadLoop();
+    }
+  </script>
+
+  <!-- PART 2/4 continues here -->
+  <script>
+    const CONFIG = {
+      colorByDue: true,
+      ranges: [
+        { key:'overdue', label:{de:'Überfällig',       en:'Overdue'},          test: d => Number.isFinite(d) && d < 1 },
+        { key:'next3',   label:{de:'Nächste 3 Tage',   en:'Next 3 days'},      test: d => Number.isFinite(d) && d <= 3 },
+        { key:'next5',   label:{de:'Nächste 5 Tage',   en:'Next 5 days'},      test: d => Number.isFinite(d) && d <= 5 },
+        { key:'next7',   label:{de:'Nächste 7 Tage',   en:'Next 7 days'},      test: d => Number.isFinite(d) && d <= 7 },
+        { key:'next10',  label:{de:'Nächste 10 Tage',  en:'Next 10 days'},     test: d => Number.isFinite(d) && d <= 10 },
+        { key:'next14',  label:{de:'Nächste 2 Wochen', en:'Next 2 weeks'},     test: d => Number.isFinite(d) && d <= 14 },
+        { key:'next21',  label:{de:'Nächste 3 Wochen', en:'Next 3 weeks'},     test: d => Number.isFinite(d) && d <= 21 },
+        { key:'all',     label:{de:'Alle',            en:'All'},              test: _ => true }
+      ]
+    };
+
+    (function(){
+      const app         = document.getElementById('app');
+      const rangeSelect = document.getElementById('range-select');
+      const sortSelect  = document.getElementById('sort-select');
+      const searchInput = document.getElementById('search-input');
+      const viewSelect  = document.getElementById('view-select');
+      const langSelect  = document.getElementById('lang-select');
+      const themeBtn    = document.getElementById('theme-btn');
+      const themeIcn    = document.getElementById('theme-icn');
+      const themeLabel  = document.getElementById('theme-label');
+      const exportBtn   = document.getElementById('export-btn');
+      const btnTest     = document.getElementById('ha-test');
+
+      // statische Labels im Header
+      const lblLang = document.getElementById('lbl-language');
+      const lblView = document.getElementById('lbl-view');
+      const lblRange= document.getElementById('lbl-range');
+      const lblSort = document.getElementById('lbl-sort');
+      const btnNewTaskText = document.getElementById('btn-new-task');
+      const optViewGrouped = document.getElementById('opt-view-grouped');
+      const optViewFlat    = document.getElementById('opt-view-flat');
+      const optSortDue     = document.getElementById('opt-sort-due');
+      const optSortAlpha   = document.getElementById('opt-sort-alpha');
+
+      window.ppRender = window.ppRender || function(){};
+
+      // ===== i18n =====
+      const LANG_KEY = 'pp-lang';
+      const I18N = {
+        de: {
+          lang:'Sprache:',
+          view:'Ansicht:',
+          range:'Zeitraum:',
+          sort:'Sortierung:',
+          viewGrouped:'Nach Bereichen',
+          viewFlat:'Alle Aufgaben',
+          sortDue:'Fälligkeit (bald → spät)',
+          sortAlpha:'Alphabetisch (Task)',
+          searchPh:'Suche in Task/Bereich…',
+          themeDark:'Dunkel',
+          themeLight:'Hell',
+          themeSystem:'System',
+          newTask:'Neue Aufgabe',
+          allTasks:'Alle Aufgaben',
+          entries:'Einträge',
+          area:'Bereich',
+          rhythm:'Rhythmus',
+          days:'Tage',
+          lastDone:'Letztes Mal',
+          nextDue:'Demnächst',
+          dueIn:'Fällig in',
+          today:'heute',
+          overdueSuffix:'überfällig',
+          editTitle:'Aufgabe bearbeiten',
+          addTitle:'Neue Aufgabe',
+          delete:'Löschen',
+          cancel:'Abbrechen',
+          save:'Speichern',
+          history:'Historie',
+          add:'Hinzufügen',
+          clear:'Leeren',
+          confirmDelete:'Diese Aufgabe wirklich löschen?',
+          confirmClearHist:'Historie wirklich leeren?',
+          pickDate:'Bitte Datum wählen.',
+          noEntries:'— keine Einträge —',
+          addLblArea:'Bereich',
+          addLblTask:'Aufgabe',
+          addLblRhythm:'Rhythmus (Tage)',
+          addLblIcon:'Icon (mdi:…)',
+          addLblLast:'Letztes Mal',
+          addLblDue:'Nächstes Fälligkeitsdatum (optional)',
+          addPhArea:'z. B. Küche',
+          addPhTask:'z. B. Arbeitsfläche wischen',
+          addPhIcon:'z. B. mdi:spray-bottle',
+          addHistory:'Historie',
+
+        },
+        en: {
+          lang:'Language:',
+          view:'View:',
+          range:'Range:',
+          sort:'Sort:',
+          viewGrouped:'By areas',
+          viewFlat:'All tasks',
+          sortDue:'Due (soon → late)',
+          sortAlpha:'Alphabetical (task)',
+          searchPh:'Search task/area…',
+          themeDark:'Dark',
+          themeLight:'Light',
+          themeSystem:'System',
+          newTask:'New task',
+          allTasks:'All tasks',
+          entries:'entries',
+          area:'Area',
+          rhythm:'Rhythm',
+          days:'days',
+          lastDone:'Last done',
+          nextDue:'Next due',
+          dueIn:'Due in',
+          today:'today',
+          overdueSuffix:'overdue',
+          editTitle:'Edit task',
+          addTitle:'New task',
+          delete:'Delete',
+          cancel:'Cancel',
+          save:'Save',
+          history:'History',
+          add:'Add',
+          clear:'Clear',
+          confirmDelete:'Delete this task?',
+          confirmClearHist:'Clear history?',
+          pickDate:'Please pick a date.',
+          noEntries:'— no entries —',
+          addLblArea:'Area',
+          addLblTask:'Task',
+          addLblRhythm:'Rhythm (days)',
+          addLblIcon:'Icon (mdi:…)',
+          addLblLast:'Last done',
+          addLblDue:'Next due date (optional)',
+          addPhArea:'e.g. Kitchen',
+          addPhTask:'e.g. Wipe countertops',
+          addPhIcon:'e.g. mdi:spray-bottle',
+          addHistory:'History',
+
+        }
+      };
+
+function detectSystemLang(){
+  const l = (navigator.language || navigator.userLanguage || '').toLowerCase();
+  if (l.startsWith('de')) return 'de';
+  if (l.startsWith('en')) return 'en';
+  return 'en'; // Fallback
+}
+
+let lang = localStorage.getItem(LANG_KEY);
+if (!lang) {
+  lang = detectSystemLang();
+  localStorage.setItem(LANG_KEY, lang);
+}
+
+
+      function t(key){ return (I18N[lang] && I18N[lang][key]) ? I18N[lang][key] : key; }
+
+      function applyTranslations(){
+        if(lblLang)  lblLang.textContent  = t('lang');
+        if(lblView)  lblView.textContent  = t('view');
+        if(lblRange) lblRange.textContent = t('range');
+        if(lblSort)  lblSort.textContent  = t('sort');
+
+        if(optViewGrouped) optViewGrouped.textContent = t('viewGrouped');
+        if(optViewFlat)    optViewFlat.textContent    = t('viewFlat');
+        if(optSortDue)     optSortDue.textContent     = t('sortDue');
+        if(optSortAlpha)   optSortAlpha.textContent   = t('sortAlpha');
+
+        if(searchInput) searchInput.placeholder = t('searchPh');
+        if(btnNewTaskText) btnNewTaskText.textContent = t('newTask');
+
+        // Theme Label wird in setTheme gesetzt, hier nur sicherstellen
+        setTheme(themeMode);
+
+        // Dialogtitel + Buttons (falls bereits im DOM)
+        const addDlgTitle = document.querySelector('#add-task-dialog .dlg-title');
+        if(addDlgTitle) addDlgTitle.textContent = t('addTitle');
+
+        const editDlgTitle = document.querySelector('#edit-task-dialog .dlg-title');
+        if(editDlgTitle) editDlgTitle.textContent = t('editTitle');
+
+        const addCancel = document.getElementById('add-task-cancel');
+        if(addCancel) addCancel.textContent = t('cancel');
+
+        const editCancel = document.getElementById('edit-task-cancel');
+        if(editCancel) editCancel.textContent = t('cancel');
+
+        const histStrong = document.querySelector('#edit-history-wrap strong');
+        if(histStrong) histStrong.textContent = t('history');
+
+const addBtnSave = document.getElementById('add-btn-save');
+if (addBtnSave) addBtnSave.textContent = t('save');
+
+// Add-Dialog Labels + Placeholders
+const addLblArea = document.getElementById('add-lbl-area');
+const addLblTask = document.getElementById('add-lbl-task');
+const addLblRhythm = document.getElementById('add-lbl-rhythm');
+const addLblIcon = document.getElementById('add-lbl-icon');
+const addLblLast = document.getElementById('add-lbl-last');
+const addLblDue  = document.getElementById('add-lbl-due');
+const addLblImp  = document.getElementById('add-lbl-imp');
+
+if (addLblArea) addLblArea.textContent = t('addLblArea');
+if (addLblTask) addLblTask.textContent = t('addLblTask');
+if (addLblRhythm) addLblRhythm.textContent = t('addLblRhythm');
+if (addLblIcon) addLblIcon.textContent = t('addLblIcon');
+if (addLblLast) addLblLast.textContent = t('addLblLast');
+if (addLblDue)  addLblDue.textContent  = t('addLblDue');
+if (addLblImp)  addLblImp.textContent  = t('addLblImp');
+
+const addInpArea = document.getElementById('add-inp-area');
+const addInpTask = document.getElementById('add-inp-task');
+const addInpIcon = document.getElementById('add-inp-icon');
+if (addInpArea) addInpArea.placeholder = t('addPhArea');
+if (addInpTask) addInpTask.placeholder = t('addPhTask');
+if (addInpIcon) addInpIcon.placeholder = t('addPhIcon');
+
+const editDlgTitle2 = document.getElementById('edit-dlg-title');
+if (editDlgTitle2) editDlgTitle2.textContent = t('editTitle');
+
+const editMap = [
+  ['edit-lbl-area','addLblArea'],
+  ['edit-lbl-task','addLblTask'],
+  ['edit-lbl-rhythm','addLblRhythm'],
+  ['edit-lbl-icon','addLblIcon'],
+  ['edit-lbl-last','addLblLast'],
+  ['edit-lbl-due','addLblDue'],
+  ['edit-lbl-history','addHistory'],
+  ['edit-btn-hist-add','add'],
+  ['edit-btn-hist-clear','clear'],
+  ['edit-btn-delete','delete'],
+  ['edit-btn-cancel','cancel'],
+  ['edit-btn-save','save']
+];
+
+editMap.forEach(([id,key])=>{
+  const el = document.getElementById(id);
+  if (el) el.textContent = t(key);
+});
+
+        // Range options neu bauen
+        rangeSelect.innerHTML = CONFIG.ranges.map(r => `<option value="${r.key}">${r.label[lang] || r.label.de}</option>`).join('');
+        if(!rangeSelect.value) rangeSelect.value = 'all';
+      }
+
+      langSelect.value = lang;
+      langSelect.addEventListener('change', ()=>{
+        lang = langSelect.value;
+        localStorage.setItem(LANG_KEY, lang);
+        applyTranslations();
+        render();
+      });
+
+      // ===== Utils =====
+      const parseDate  = (str) => str ? new Date(str + 'T00:00:00') : null;
+      const toISO      = (d)=> d ? d.toISOString().slice(0,10) : '';
+      const addDays    = (d, n)=>{ const x = new Date(d); x.setDate(x.getDate()+Number(n||0)); return x; };
+      const today      = ()=>{ const tt=new Date(); return new Date(tt.getFullYear(), tt.getMonth(), tt.getDate()); };
+      const diffInDays = (a,b)=> Math.round((a - b) / 86400000);
+      const fmtDate    = (str) => { const d = parseDate(str); if(!d) return '—'; return new Intl.DateTimeFormat(lang==='de'?'de-DE':'en-US',{ year:'numeric', month:'2-digit', day:'2-digit'}).format(d); };
+      const cssId      = (s)=> String(s).toLowerCase().replace(/[^a-z0-9]+/g,'-').replace(/(^-|-$)/g,'');
+      const escapeHtml = (str)=> String(str)
+        .replaceAll('&','&amp;').replaceAll('<','&lt;').replaceAll('>','&gt;')
+        .replaceAll('"','&quot;').replaceAll("'","&#39;");
+
+      // View-Mode speichern
+      const VIEW_KEY = 'pp-view-mode';
+      viewSelect.value = localStorage.getItem(VIEW_KEY) || 'grouped';
+      viewSelect.addEventListener('change', () => {
+        localStorage.setItem(VIEW_KEY, viewSelect.value);
+        render();
+      });
+
+      // Theme
+      const THEME_KEY = 'pp-theme';
+      function setTheme(mode) {
+        document.documentElement.setAttribute('data-theme', mode);
+        if (mode === 'dark')      { themeIcn.setAttribute('icon', 'mdi:weather-night');       themeLabel.textContent = t('themeDark'); }
+        else if (mode === 'light'){ themeIcn.setAttribute('icon', 'mdi:white-balance-sunny'); themeLabel.textContent = t('themeLight'); }
+        else                      { themeIcn.setAttribute('icon', 'mdi:monitor');             themeLabel.textContent = t('themeSystem'); }
+      }
+      function nextMode(curr) { return curr === 'dark' ? 'light' : curr === 'light' ? 'system' : 'dark'; }
+      let themeMode = localStorage.getItem(THEME_KEY) || 'system';
+      setTheme(themeMode);
+      themeBtn.addEventListener('click', () => {
+        themeMode = nextMode(themeMode);
+        localStorage.setItem(THEME_KEY, themeMode);
+        setTheme(themeMode);
+      });
+      const mql = window.matchMedia('(prefers-color-scheme: light)');
+      mql.addEventListener?.('change', () => { if (themeMode === 'system') setTheme('system'); });
+
+      // Overrides
+      const STORAGE_KEY = 'pp-overrides';
+      const getOverrides = ()=>{ try{ return JSON.parse(localStorage.getItem(STORAGE_KEY)||'{}'); }catch{ return {}; } };
+      const setOverrides = (obj)=> localStorage.setItem(STORAGE_KEY, JSON.stringify(obj));
+
+      const makeId = (r)=> [r.Area, r.Task].map(v=>String(v||'').toLowerCase().replace(/[^a-z0-9]+/g,'-')).join('__');
+
+      // UID + History
+      let __uidSeed = Date.now();
+      const uid = () => (__uidSeed++).toString(36);
+
+      function ensureUids(){
+        if (!Array.isArray(window.TABLE_DATA)) return;
+        for (const r of window.TABLE_DATA) {
+          if (!r.__uid) r.__uid = uid();
+          if (!Array.isArray(r.__history)) {
+            const init = (r['Last done [Date]'] && String(r['Last done [Date]']).trim()) ? [r['Last done [Date]']] : [];
+            r.__history = init;
+          }
+        }
+      }
+
+      function recompute(item){
+        const last   = parseDate(item['Last done [Date]']);
+        const manual = item['New Due date [date]'] ? parseDate(item['New Due date [date]']) : null;
+        let nextDue = null;
+        if (manual) nextDue = manual;
+        else if (last && Number.isFinite(item.Rhythmen)) {
+          nextDue = addDays(last, Number(item.Rhythmen || 0));
+          item['New Due date [date]'] = toISO(nextDue);
+        }
+        const now = today();
+        const dueIn = nextDue ? diffInDays(nextDue, now) : null;
+        item['Due in [days]'] = Number.isFinite(dueIn) ? dueIn : null;
+        return item;
+      }
+
+      function applyOverrides(rows){
+        const ov = getOverrides();
+        rows.forEach(r=>{
+          const key = makeId(r);
+          if(ov[key]) Object.assign(r, ov[key]);
+          if (!Array.isArray(r.__history)) r.__history = [];
+          recompute(r);
+        });
+        return rows;
+      }
+
+      // Collapse state
+      const COLLAPSE_PREFIX = 'pp-collapse-';
+      const getCollapsed = area => localStorage.getItem(COLLAPSE_PREFIX+area) === '1';
+      const setCollapsed = (area, v) => localStorage.setItem(COLLAPSE_PREFIX+area, v?'1':'0');
+
+      function groupByArea(rows){
+        const map = new Map();
+        rows.forEach(r=>{ const area = r.Area || 'Ohne Bereich'; if(!map.has(area)) map.set(area, []); map.get(area).push(r); });
+        return map;
+      }
+
+      function importanceClass(importance){
+        const v = String(importance||'').toLowerCase();
+        if(v.includes('red')) return 'imp-red';
+        if(v.includes('yellow')) return 'imp-yellow';
+        if(v.includes('green')) return 'imp-green';
+        return '';
+      }
+      function dueClass(dueDays){
+        if(dueDays == null || isNaN(dueDays)) return '';
+        if(dueDays < 0) return 'overdue';
+        if(dueDays <= 7) return 'due-soon';
+        return 'ok';
+      }
+      function accentClassFromDue(dueDays, rhythm) {
+        if (!Number.isFinite(dueDays) || !Number.isFinite(rhythm) || rhythm <= 0) return '';
+        if (dueDays < 0) return 'imp-red';
+        const ratio = dueDays / rhythm;
+        if (ratio >= 0.6) return 'imp-green';
+        if (ratio > 0.2)  return 'imp-yellow';
+        return 'imp-orange';
+      }
+
+      function uniqPreserveOrder(arr){
+        const seen = new Set();
+        const out = [];
+        for(const v of arr){ if(!v) continue; if(!seen.has(v)){ seen.add(v); out.push(v); } }
+        return out;
+      }
+      function sortIsoAsc(arr){ return [...arr].sort((a,b)=> (a<b?-1:a>b?1:0)); }
+
+      // Export (atomar)
+      async function doExport(reason){
+        if (window.__ppExportInProgress) return;
+        window.__ppExportInProgress = true;
+        try{
+          const base = Array.isArray(window.TABLE_DATA) ? JSON.parse(JSON.stringify(window.TABLE_DATA)) : [];
+          const rows = applyOverrides(base).map(r => recompute(r));
+          const jsContent = 'window.TABLE_DATA = ' + JSON.stringify(rows, null, 2) + ';\n';
+          const content_b64 = btoa(unescape(encodeURIComponent(jsContent)));
+          await callWebhook({ filename: 'data.updated.js', content_b64 });
+          reloadUpdatedScriptAndRender();
+        } finally {
+          window.__ppExportInProgress = false;
+        }
+      }
+
+      let __exportTimer = null;
+      function scheduleExport(reason='change'){
+        clearTimeout(__exportTimer);
+        __exportTimer = setTimeout(()=>{ doExport(reason); }, 400);
+      }
+      exportBtn.addEventListener('click', ()=>{ doExport('button'); });
+
+      btnTest.addEventListener('click', async ()=>{
+        try{
+          const dummy = 'window.TABLE_DATA = []; // TEST\n';
+          const content_b64 = btoa(unescape(encodeURIComponent(dummy)));
+          await callWebhook({ filename:'data.updated.js', content_b64 });
+          reloadUpdatedScriptAndRender();
+        }catch(e){
+          alert('Webhook-Test fehlgeschlagen: ' + e.message);
+        }
+      });
+
+      // Range options initial (werden auch in applyTranslations neu gesetzt)
+      rangeSelect.innerHTML = CONFIG.ranges.map(r => `<option value="${r.key}">${r.label[lang] || r.label.de}</option>`).join('');
+      rangeSelect.value = 'all';
+
+      // Added restore (Duplikate vermeiden per __uid)
+      function restoreAdded(){
+        try{
+          const ADDED_KEY = 'pp-added';
+          const added = JSON.parse(localStorage.getItem(ADDED_KEY) || '[]');
+          if (Array.isArray(added) && added.length) {
+            if (!Array.isArray(window.TABLE_DATA)) window.TABLE_DATA = [];
+            const existing = new Set(window.TABLE_DATA.map(r => r.__uid).filter(Boolean));
+            for (const r of added){
+              if (!r.__uid) r.__uid = uid();
+              if(!Array.isArray(r.__history)) r.__history = [];
+              if(!existing.has(r.__uid)){
+                window.TABLE_DATA.push(r);
+                existing.add(r.__uid);
+              }
+            }
+          }
+        }catch{}
+      }
+
+      window.ppRender = function(){
+        ensureUids();
+        restoreAdded();
+        applyTranslations();
+        render();
+      };
+
+      // Filter/Suche
+      rangeSelect.addEventListener('change', render);
+      sortSelect.addEventListener('change', render);
+      searchInput.addEventListener('input', render);
+
+      // initial
+      applyTranslations();
+
+      /* PART 3/4 continues here */
+
+            // ===== History SVG =====
+      function buildHistorySVG(dates, rhythmDays){
+        const W = 640, H = 110, L = 24, R = 12, T = 18, B = 30;
+        const midY = Math.round(H / 2);
+
+        const RY = Math.max(1, Number.isFinite(rhythmDays) ? Number(rhythmDays) : 7);
+
+        const now = today();
+        const maxX = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+        const MAX_LOOKBACK_DAYS = Math.round(365.25 * 2);
+        const lookbackDays = Math.min(8 * RY, MAX_LOOKBACK_DAYS);
+        const minX = addDays(maxX, -lookbackDays);
+
+        const toTime = d => d.getTime();
+        const span = Math.max(1, toTime(maxX) - toTime(minX));
+        const xOf = (d)=> {
+          const t = Math.min(Math.max(toTime(d), toTime(minX)), toTime(maxX));
+          return L + ((t - toTime(minX)) / span) * (W - L - R);
+        };
+
+        const fmtShort = (d)=> new Intl.DateTimeFormat(lang==='de'?'de-DE':'en-US', { day:'2-digit', month:'short' })
+          .format(d).replace('.', '').replace(/\s+/, '. ');
+        const fmtYear = (d)=> d.getFullYear();
+
+        const pts = (Array.isArray(dates)?dates:[])
+          .map(d => d instanceof Date ? d : null)
+          .filter(Boolean)
+          .filter(d => d >= minX && d <= maxX)
+          .sort((a,b)=> a-b)
+          .map(d => ({ x: Math.round(xOf(d)), y: midY, d }));
+
+        function startOfISOWeek(d){
+          const wd = d.getDay() || 7;
+          const res = new Date(d);
+          res.setDate(res.getDate() - (wd - 1));
+          res.setHours(0,0,0,0);
+          return res;
+        }
+        function* eachMondayBetween(a,b){
+          let m = startOfISOWeek(a);
+          if (m < a) m = addDays(m, 7);
+          while (m <= b){ yield new Date(m); m = addDays(m, 7); }
+        }
+        function firstOfMonth(d){
+          const res = new Date(d.getFullYear(), d.getMonth(), 1);
+          res.setHours(0,0,0,0);
+          return res;
+        }
+        function* eachFirstOfMonthStepBetween(a,b, stepMonths=1){
+          let m = firstOfMonth(a);
+          if (m < a) m = new Date(m.getFullYear(), m.getMonth()+stepMonths, 1);
+          while (m <= b){
+            yield new Date(m);
+            m = new Date(m.getFullYear(), m.getMonth()+stepMonths, 1);
+          }
+        }
+        function uniqByTime(list){
+          const seen = new Set(); const out = [];
+          for (const d of list){ const t = +d; if(!seen.has(t)){ seen.add(t); out.push(d); } }
+          return out.sort((a,b)=>a-b);
+        }
+        function januarysBetween(a,b){
+          const res = [];
+          for (let y = a.getFullYear(); y <= b.getFullYear(); y++){
+            const d = new Date(y, 0, 1);
+            if (d >= a && d <= b) res.push(d);
+          }
+          return res;
+        }
+
+        const useMonthly = RY >= 8;
+        const every2Months = RY > 30;
+
+        const tickEls = [];
+        if (useMonthly){
+          const step = every2Months ? 2 : 1;
+
+          let tickDates = [];
+          for (const d of eachFirstOfMonthStepBetween(minX, maxX, step)){
+            tickDates.push(new Date(d));
+          }
+          if (every2Months){
+            tickDates = uniqByTime([...tickDates, ...januarysBetween(minX, maxX)]);
+          }
+
+          for (const d of tickDates){
+            const x = Math.round(xOf(d));
+            const label = fmtShort(d);
+            const isNewYear = d.getMonth() === 0;
+            const yearLabel = fmtYear(d);
+
+            tickEls.push(`
+              <line x1="${x}" y1="${T}" x2="${x}" y2="${H-B}" opacity=".35"></line>
+              <text x="${x}" y="${H-12}" font-size="11" text-anchor="middle" fill="currentColor" opacity=".9">${label}</text>
+              ${isNewYear ? `<text x="${x}" y="${H-2}" font-size="10" text-anchor="middle" fill="currentColor" opacity=".6">${yearLabel}</text>` : ''}
+            `);
+          }
+        } else {
+          for (const d of eachMondayBetween(minX, maxX)){
+            const x = Math.round(xOf(d));
+            const label = fmtShort(d);
+            const isNewYear = (d.getDate() <= 7 && d.getMonth() === 0);
+            const yearLabel = fmtYear(d);
+
+            tickEls.push(`
+              <line x1="${x}" y1="${T}" x2="${x}" y2="${H-B}" opacity=".35"></line>
+              <text x="${x}" y="${H-12}" font-size="11" text-anchor="middle" fill="currentColor" opacity=".9">${label}</text>
+              ${isNewYear ? `<text x="${x}" y="${H-2}" font-size="10" text-anchor="middle" fill="currentColor" opacity=".6">${yearLabel}</text>` : ''}
+            `);
+          }
+        }
+
+        const axis = `M ${L},${midY} L ${W-R},${midY}`;
+
+        const crosses = pts.map(p => {
+          const size = 6;
+          const x1 = p.x - size, x2 = p.x + size;
+          const y1 = p.y - size, y2 = p.y + size;
+          const label = fmtShort(p.d);
+          return `
+            <g stroke="currentColor" fill="none" stroke-width="2">
+              <line x1="${x1}" y1="${y1}" x2="${x2}" y2="${y2}"></line>
+              <line x1="${x1}" y1="${y2}" x2="${x2}" y2="${y1}"></line>
+              <title>${label}</title>
+            </g>
+          `;
+        }).join('');
+
+        if (!dates || !dates.length){
+          return `<div class="hist-empty">${t('noEntries')}</div>`;
+        }
+
+        return `
+          <svg class="hist-svg" viewBox="0 0 ${W} ${H}" role="img" aria-label="Historie als Zeitachse">
+            <g stroke="var(--border-alt)" fill="none">
+              <rect x="1" y="1" width="${W-2}" height="${H-2}" rx="8" ry="8" opacity=".2"></rect>
+              ${tickEls.join('')}
+            </g>
+            <g stroke="currentColor" stroke-width="3" fill="none" opacity=".6">
+              <path d="${axis}"></path>
+            </g>
+            ${crosses}
+          </svg>
+        `;
+      }
+
+      // ===== Card =====
+      function createCard(item){
+        const card = document.createElement('article');
+        card.className = 'card';
+
+        const dueDays = Number(item['Due in [days]']);
+        const rhythm  = Number(item.Rhythmen);
+        const imp = CONFIG.colorByDue ? accentClassFromDue(dueDays, rhythm) : importanceClass(item['Importance (colorScale)']);
+        const dueCls = dueClass(dueDays);
+        const icon = (item.Icon && String(item.Icon).trim()) ? String(item.Icon).trim() : 'mdi:check';
+        const id = item.__uid;
+
+        let dueText = '—';
+        if (Number.isFinite(dueDays)) {
+          if (dueDays === 0) dueText = t('today');
+          else if (dueDays > 0) dueText = `${dueDays} ${t('days')}`;
+          else dueText = `${Math.abs(dueDays)} ${t('days')} ${t('overdueSuffix')}`;
+        }
+
+        card.innerHTML = `
+          <span class="accent ${imp}" aria-hidden="true"></span>
+
+          <button class="edit-btn" type="button" title="${escapeHtml(t('editTitle'))}" data-id="${id}">
+            <iconify-icon icon="mdi:pencil"></iconify-icon>
+          </button>
+
+          <div class="top">
+            <div class="icn" data-id="${id}" title="${escapeHtml(t('lastDone'))} → ${escapeHtml(t('today'))}">
+              <iconify-icon icon="${icon}"></iconify-icon>
+            </div>
+            <div>
+              <div class="task">${escapeHtml(item.Task || '—')}</div>
+              <div class="meta">
+                <span class="pill">${escapeHtml(t('area'))}: ${escapeHtml(item.Area || '—')}</span>
+                <span class="pill">${escapeHtml(t('rhythm'))}: ${Number.isFinite(rhythm) ? rhythm : '—'} ${escapeHtml(t('days'))}</span>
+              </div>
+            </div>
+          </div>
+
+          <div class="row"><span>${escapeHtml(t('lastDone'))}</span><b>${fmtDate(item['Last done [Date]'])}</b></div>
+          <div class="row"><span>${escapeHtml(t('nextDue'))}</span><b>${fmtDate(item['New Due date [date]'])}</b></div>
+          <div class="row due ${dueCls}">
+            <span>${escapeHtml(t('dueIn'))}</span>
+            <b>${escapeHtml(dueText)}</b>
+          </div>
+        `;
+
+        // Done click
+        const icn = card.querySelector('.icn');
+        icn.addEventListener('click', ()=>{
+          icn.classList.add('pulse'); setTimeout(()=>icn.classList.remove('pulse'), 800);
+
+          const rowsAll = Array.isArray(window.TABLE_DATA) ? window.TABLE_DATA : [];
+          const idx = rowsAll.findIndex(r=> r.__uid === id);
+          if(idx < 0) return;
+
+          const r = rowsAll[idx];
+          const now = today();
+          const nowIso = toISO(now);
+
+          const prevLast = r['Last done [Date]'] || null;
+          const hist = Array.isArray(r.__history) ? r.__history.slice() : [];
+          if (prevLast) hist.push(prevLast);
+          hist.push(nowIso);
+          r.__history = uniqPreserveOrder(hist);
+
+          r['Last done [Date]'] = nowIso;
+          const due = addDays(now, r.Rhythmen||0);
+          r['New Due date [date]'] = toISO(due);
+          r['Due in [days]'] = diffInDays(due, now);
+
+          const ov = getOverrides();
+          const key = makeId(r);
+          ov[key] = {
+            ...(ov[key]||{}),
+            __uid: r.__uid,
+            'Last done [Date]': r['Last done [Date]'],
+            'New Due date [date]': r['New Due date [date]'],
+            'Due in [days]': r['Due in [days]'],
+            __history: r.__history
+          };
+          setOverrides(ov);
+
+          render();
+          scheduleExport('mark-done');
+        });
+
+        return card;
+      }
+
+      // ===== Render =====
+      function render(){
+        const sortMode = sortSelect.value;
+        const q = searchInput.value.trim().toLowerCase();
+        const rangeKey = rangeSelect.value;
+        const rangeDef = CONFIG.ranges.find(r => r.key === rangeKey) || CONFIG.ranges[0];
+        const viewMode = viewSelect.value;
+
+        let rows = Array.isArray(window.TABLE_DATA) ? [...window.TABLE_DATA] : [];
+        rows = applyOverrides(rows);
+
+        rows = rows.filter(r => rangeDef.test(Number(r['Due in [days]'])));
+
+        if(q){
+          rows = rows.filter(r =>
+            String(r.Task||'').toLowerCase().includes(q) ||
+            String(r.Area||'').toLowerCase().includes(q)
+          );
+        }
+
+        const sorters = {
+          due:   (a,b)=> (Number(a['Due in [days]']) ?? 0) - (Number(b['Due in [days]']) ?? 0),
+          alpha: (a,b)=> String(a.Task||'').localeCompare(String(b.Task||''), lang==='de'?'de':'en')
+        };
+
+        const frag = document.createDocumentFragment();
+
+        if (viewMode === 'flat') {
+          const items = rows.sort(sorters[sortMode]);
+
+          const section = document.createElement('section');
+          section.className = 'area';
+
+          const header = document.createElement('div');
+          header.className = 'area-header';
+          header.innerHTML = `
+            <div class="area-title">
+              <iconify-icon icon="mdi:format-list-bulleted"></iconify-icon>
+              ${escapeHtml(t('allTasks'))}
+            </div>
+            <span class="badge" title="${escapeHtml(t('entries'))}">${items.length} ${escapeHtml(t('entries'))}</span>
+          `;
+          section.appendChild(header);
+
+          const grid = document.createElement('div');
+          grid.className = 'grid';
+          items.forEach(item => grid.appendChild(createCard(item)));
+          section.appendChild(grid);
+          frag.appendChild(section);
+
+          app.replaceChildren(frag);
+          return;
+        }
+
+        const byArea = groupByArea(rows);
+        const areas = [...byArea.keys()].sort((a,b)=>a.localeCompare(b, lang==='de'?'de':'en'));
+
+        areas.forEach(area=>{
+          const section = document.createElement('section');
+          section.className = 'area';
+
+          const isCollapsed = getCollapsed(area);
+
+          const header = document.createElement('div');
+          header.className = 'area-header' + (isCollapsed ? ' collapsed' : '');
+          header.innerHTML = `
+            <div class="area-toggle" role="button" aria-expanded="${!isCollapsed}" aria-controls="grid-${cssId(area)}">
+              <iconify-icon class="chev" icon="mdi:chevron-down"></iconify-icon>
+              <div class="area-title"><iconify-icon icon="mdi:home-floor-l"></iconify-icon>${escapeHtml(area)}</div>
+              <span class="badge" title="${escapeHtml(t('entries'))}">${byArea.get(area).length} ${escapeHtml(t('entries'))}</span>
+            </div>
+          `;
+          section.appendChild(header);
+
+          const grid = document.createElement('div');
+          grid.className = 'grid' + (isCollapsed ? ' is-collapsed' : '');
+          grid.id = `grid-${cssId(area)}`;
+
+          const items = [...byArea.get(area)].sort(sorters[sortMode]);
+          items.forEach(item => grid.appendChild(createCard(item)));
+
+          section.appendChild(grid);
+          frag.appendChild(section);
+
+          header.querySelector('.area-toggle').addEventListener('click',()=>{
+            const collapsed = grid.classList.toggle('is-collapsed');
+            header.classList.toggle('collapsed', collapsed);
+            header.querySelector('.area-toggle').setAttribute('aria-expanded', String(!collapsed));
+            setCollapsed(area, collapsed);
+          });
+        });
+
+        app.replaceChildren(frag);
+      }
+
+      // Edit delegation
+      app.addEventListener('click', (e) => {
+        const btn = e.target.closest('button.edit-btn');
+        if (!btn) return;
+        const id = btn.dataset.id;
+        openEditDialog?.(id);
+      });
+
+      function safeInit(fn){
+        if (document.readyState === 'loading') window.addEventListener('DOMContentLoaded', fn, { once:true });
+        else fn();
+      }
+
+      function initAddDialog(){
+        const addBtn    = document.getElementById('add-task-btn');
+        const dlg       = document.getElementById('add-task-dialog');
+        const form      = document.getElementById('add-task-form');
+        const cancelBtn = document.getElementById('add-task-cancel');
+        if (!addBtn || !dlg || !form || !cancelBtn) return;
+
+        function openAddDialog(){
+          form.reset();
+          const tt = today();
+          const iso = `${tt.getFullYear()}-${String(tt.getMonth()+1).padStart(2,'0')}-${String(tt.getDate()).padStart(2,'0')}`;
+          form.elements['Last'].value = iso;
+          dlg.showModal();
+          attachIconPicker(form.elements['Icon']);
+        }
+        function closeAddDialog(){ dlg.close(); }
+
+        addBtn.addEventListener('click', openAddDialog);
+        cancelBtn.addEventListener('click', closeAddDialog);
+        dlg.addEventListener('cancel', (e)=>{ e.preventDefault(); closeAddDialog(); });
+
+        form.addEventListener('submit', (e)=>{
+          e.preventDefault();
+          const data = new FormData(form);
+          const lastIso = (data.get('Last')||'').trim();
+
+          const row = {
+            __uid: uid(),
+            Area:      (data.get('Area')||'').trim(),
+            Task:      (data.get('Task')||'').trim(),
+            Rhythmen:  Number(data.get('Rhythmen')||0),
+            Icon:      (data.get('Icon')||'').trim(),
+            'Last done [Date]': lastIso || '',
+            'New Due date [date]': data.get('Due') || '',
+            'Due in [days]': null,
+            __history: lastIso ? [lastIso] : []
+          };
+
+          if (!Array.isArray(window.TABLE_DATA)) window.TABLE_DATA = [];
+          window.TABLE_DATA.push(row);
+          recompute(row);
+          render();
+
+          try{
+            const ADDED_KEY = 'pp-added';
+            const added = JSON.parse(localStorage.getItem(ADDED_KEY)||'[]');
+            added.push(row);
+            localStorage.setItem(ADDED_KEY, JSON.stringify(added));
+          }catch{}
+
+          scheduleExport('add');
+          closeAddDialog();
+        });
+      }
+
+      function initEditDialog(){
+        const dlg   = document.getElementById('edit-task-dialog');
+        const form  = document.getElementById('edit-task-form');
+        const cancelBtn = document.getElementById('edit-task-cancel');
+        const delBtn    = document.getElementById('edit-task-delete');
+        const clearHistBtn = document.getElementById('edit-history-clear');
+
+        const histAddBtn = document.getElementById('edit-history-add');
+        const histAddDate= document.getElementById('edit-history-date');
+        const histView   = document.getElementById('edit-history-view');
+
+        if (!dlg || !form || !cancelBtn) return;
+
+        function getRowById(id){
+          const rowsAll = Array.isArray(window.TABLE_DATA) ? window.TABLE_DATA : [];
+          const idx = rowsAll.findIndex(r => r.__uid === id);
+          return { rowsAll, idx, row: idx>=0 ? rowsAll[idx] : null };
+        }
+
+        function refreshHistView(arr, rhythmDays){
+          const dates = (Array.isArray(arr)?arr:[])
+            .map(d => parseDate(d))
+            .filter(Boolean)
+            .sort((a,b)=>a-b);
+          histView.innerHTML = buildHistorySVG(dates, rhythmDays);
+        }
+
+        function fill(row, id){
+          form.elements['__id'].value = id;
+          form.elements['Area'].value = row.Area || '';
+          form.elements['Task'].value = row.Task || '';
+          form.elements['Rhythmen'].value = Number.isFinite(Number(row.Rhythmen)) ? Number(row.Rhythmen) : 0;
+          form.elements['Icon'].value = row.Icon || '';
+          form.elements['Last'].value = row['Last done [Date]'] || '';
+          form.elements['Due'].value  = row['New Due date [date]'] || '';
+          refreshHistView(row.__history||[], row.Rhythmen);
+
+          // Dialog Labels bei Sprachwechsel aktualisieren
+          applyTranslations();
+        }
+
+        window.openEditDialog = function(id){
+          const {row} = getRowById(id);
+          if (!row) return;
+          fill(row, id);
+          attachIconPicker(form.elements['Icon']);
+          dlg.showModal();
+        };
+
+        function close(){ dlg.close(); }
+        cancelBtn.addEventListener('click', close);
+        dlg.addEventListener('cancel', (e)=>{ e.preventDefault(); close(); });
+
+        // Save
+        form.addEventListener('submit', (e)=>{
+          e.preventDefault();
+          const data = new FormData(form);
+          const uidVal = form.elements['__id'].value;
+
+          const {rowsAll, idx, row} = getRowById(uidVal);
+          if (!row) return;
+
+          const updated = {
+            ...row,
+            Area: (data.get('Area')||'').trim(),
+            Task: (data.get('Task')||'').trim(),
+            Rhythmen: Number(data.get('Rhythmen')||0),
+            Icon: (data.get('Icon')||'').trim(),
+            'Last done [Date]': data.get('Last') || '',
+            'New Due date [date]': data.get('Due') || '',
+            __history: Array.isArray(row.__history) ? row.__history : []
+          };
+
+          const oldKey = makeId(rowsAll[idx]);
+          const newKey = makeId(updated);
+          const ov = getOverrides();
+          if (oldKey !== newKey && ov[oldKey]) { ov[newKey] = { ...ov[oldKey] }; delete ov[oldKey]; }
+          ov[newKey] = {
+            ...(ov[newKey]||{}),
+            __uid: updated.__uid,
+            Area: updated.Area,
+            Task: updated.Task,
+            Rhythmen: updated.Rhythmen,
+            Icon: updated.Icon,
+            'Last done [Date]': updated['Last done [Date]'],
+            'New Due date [date]': updated['New Due date [date]'],
+            __history: updated.__history,
+          };
+          setOverrides(ov);
+
+          rowsAll[idx] = updated;
+          recompute(rowsAll[idx]);
+          render();
+          close();
+
+          scheduleExport('edit');
+        });
+
+        // History add
+        histAddBtn?.addEventListener('click', ()=>{
+          const id = form.elements['__id'].value;
+          const d = (histAddDate?.value||'').trim();
+          if(!d){ alert(t('pickDate')); return; }
+
+          const {row} = getRowById(id);
+          if(!row) return;
+
+          row.__history = uniqPreserveOrder(sortIsoAsc([...(row.__history||[]), d]));
+
+          const ov = getOverrides();
+          const key = makeId(row);
+          ov[key] = { ...(ov[key]||{}), __uid: row.__uid, __history: row.__history };
+          setOverrides(ov);
+
+          refreshHistView(row.__history, row.Rhythmen);
+          render();
+          scheduleExport('hist-add');
+        });
+
+        // History clear
+        clearHistBtn?.addEventListener('click', ()=>{
+          const id = form.elements['__id'].value;
+          const {row} = getRowById(id);
+          if(!row) return;
+          if(!confirm(t('confirmClearHist'))) return;
+
+          row.__history = [];
+          const ov = getOverrides();
+          const key = makeId(row);
+          ov[key] = { ...(ov[key]||{}), __uid: row.__uid, __history: row.__history };
+          setOverrides(ov);
+
+          refreshHistView(row.__history, row.Rhythmen);
+          render();
+          scheduleExport('hist-clear');
+        });
+
+        // Delete (stabil über __uid)
+        delBtn?.addEventListener('click', async ()=>{
+          const id = form.elements['__id'].value;
+          if (!confirm(t('confirmDelete'))) return;
+
+          const {rowsAll, idx, row} = getRowById(id);
+          if (!row || idx < 0) return;
+
+          const uidToDelete = row.__uid;
+          const keyNow = makeId(row);
+
+          const ov = getOverrides();
+          if (ov[keyNow]) delete ov[keyNow];
+          for (const k of Object.keys(ov)) {
+            if (ov[k] && ov[k].__uid === uidToDelete) delete ov[k];
+          }
+          setOverrides(ov);
+
+          rowsAll.splice(idx, 1);
+
+          try{
+            const ADDED_KEY = 'pp-added';
+            const added = JSON.parse(localStorage.getItem(ADDED_KEY) || '[]');
+            const cleaned = Array.isArray(added) ? added.filter(r => r.__uid !== uidToDelete) : [];
+            localStorage.setItem(ADDED_KEY, JSON.stringify(cleaned));
+          }catch{}
+
+          render();
+          close();
+
+          await doExport('delete');
+        });
+      }
+
+      safeInit(initAddDialog);
+      safeInit(initEditDialog);
+
+      window.ppRender();
+
+      /* PART 4/4 continues here */
+    })();
+  </script>
+
+  <!-- Dialoge -->
+  <dialog id="add-task-dialog">
+  <form id="add-task-form" method="dialog">
+    <h3 class="dlg-title" id="add-dlg-title">Neue Aufgabe</h3>
+    <div class="dlg-grid">
+      <label><span id="add-lbl-area">Bereich</span>
+        <input name="Area" type="text" required placeholder="z. B. Küche" id="add-inp-area" />
+      </label>
+
+      <label><span id="add-lbl-task">Task</span>
+        <input name="Task" type="text" required placeholder="z. B. Arbeitsfläche wischen" id="add-inp-task" />
+      </label>
+
+      <label><span id="add-lbl-rhythm">Rhythmus (Tage)</span>
+        <input name="Rhythmen" type="number" min="0" step="1" value="7" required />
+      </label>
+
+      <label><span id="add-lbl-icon">Icon (mdi:…)</span>
+        <input name="Icon" type="text" placeholder="z. B. mdi:spray-bottle" id="add-inp-icon" />
+      </label>
+
+      <label><span id="add-lbl-last">Letztes Mal</span>
+        <input name="Last" type="date" />
+      </label>
+
+      <label><span id="add-lbl-due">Nächstes Fälligkeitsdatum (optional)</span>
+        <input name="Due" type="date" />
+      </label>
+    </div>
+    <div class="dlg-actions-right">
+      <button type="button" id="add-task-cancel" class="btn">Abbrechen</button>
+     <button type="submit" class="btn">
+  <iconify-icon icon="mdi:content-save"></iconify-icon>
+  <span id="add-btn-save">Speichern</span>
+</button>
+    </div>
+  </form>
+</dialog>
+
+<dialog id="edit-task-dialog">
+  <form id="edit-task-form" method="dialog">
+    <h3 class="dlg-title" id="edit-dlg-title">Aufgabe bearbeiten</h3>
+    <input type="hidden" name="__id" />
+
+    <div class="dlg-grid">
+      <label><span id="edit-lbl-area">Bereich</span>
+        <input name="Area" type="text" required />
+      </label>
+
+      <label><span id="edit-lbl-task">Task</span>
+        <input name="Task" type="text" required />
+      </label>
+
+      <label><span id="edit-lbl-rhythm">Rhythmus (Tage)</span>
+        <input name="Rhythmen" type="number" min="0" step="1" required />
+      </label>
+
+      <label><span id="edit-lbl-icon">Icon (mdi:…)</span>
+        <input name="Icon" type="text" />
+      </label>
+
+      <label><span id="edit-lbl-last">Letztes Mal</span>
+        <input name="Last" type="date" />
+      </label>
+
+      <label><span id="edit-lbl-due">Nächstes Fälligkeitsdatum (optional)</span>
+        <input name="Due" type="date" />
+      </label>
+    </div>
+
+    <div id="edit-history-wrap" class="hist-wrap">
+      <div class="hist-head">
+        <strong id="edit-lbl-history">Historie</strong>
+        <div class="dlg-actions-inline">
+          <input id="edit-history-date" type="date" />
+          <button type="button" id="edit-history-add" class="btn">
+            <iconify-icon icon="mdi:plus"></iconify-icon><span id="edit-btn-hist-add">Hinzufügen</span>
+          </button>
+          <button type="button" id="edit-history-clear" class="btn">
+            <iconify-icon icon="mdi:delete"></iconify-icon><span id="edit-btn-hist-clear">Leeren</span>
+          </button>
+        </div>
+      </div>
+      <ol id="edit-history-view" class="hist-list"></ol>
+    </div>
+
+    <div class="dlg-actions-between">
+      <button type="button" id="edit-task-delete" class="btn">
+        <iconify-icon icon="mdi:trash-can-outline"></iconify-icon>
+        <span id="edit-btn-delete">Löschen</span>
+      </button>
+
+      <div class="dlg-actions-inline">
+        <button type="button" id="edit-task-cancel" class="btn">
+          <span id="edit-btn-cancel">Abbrechen</span>
+        </button>
+        <button type="submit" class="btn">
+          <iconify-icon icon="mdi:content-save"></iconify-icon>
+          <span id="edit-btn-save">Speichern</span>
+        </button>
+      </div>
+    </div>
+  </form>
+</dialog>
+
+  <script>
+    /** --------------- Icon-Liste laden --------------- **/
+    let ICON_POOL = null;
+
+    async function loadIconPool(){
+      if(ICON_POOL) return ICON_POOL;
+
+      try{
+        const url = new URL(window.BASE_PATH + "mdi-icons.json", getHaOrigin()).toString();
+        const res = await fetch(url, { cache:'no-store' });
+        if(res.ok){
+          const arr = await res.json();
+          if(Array.isArray(arr) && arr.length){
+            ICON_POOL = arr.filter(s=>typeof s==='string');
+            return ICON_POOL;
+          }
+        }
+      }catch(_){ }
+
+      const used = new Set(
+        (Array.isArray(window.TABLE_DATA)?window.TABLE_DATA:[])
+          .map(r => (r.Icon||'').trim())
+          .filter(Boolean)
+      );
+
+      const seed = [
+        'mdi:check','mdi:calendar-check','mdi:clock-outline','mdi:alert-circle-outline','mdi:information-outline',
+        'mdi:spray-bottle','mdi:broom','mdi:vacuum','mdi:washing-machine','mdi:bucket','mdi:mop','mdi:toilet-brush',
+        'mdi:duster','mdi:soap','mdi:hand-wash','mdi:towel','mdi:squeegee',
+        'mdi:toilet','mdi:shower','mdi:bathtub-outline','mdi:mirror-variant','mdi:toothbrush-paste','mdi:sink','mdi:faucet',
+        'mdi:fridge','mdi:stove','mdi:microwave','mdi:kettle-outline','mdi:knife','mdi:silverware-clean','mdi:dishwasher',
+        'mdi:tshirt-crew','mdi:hanger','mdi:iron','mdi:laundry-basket','mdi:clothes-dryer',
+        'mdi:sofa','mdi:armchair','mdi:television','mdi:floor-lamp','mdi:bookshelf','mdi:window-closed','mdi:curtains',
+        'mdi:home','mdi:bed','mdi:door-closed','mdi:garage','mdi:stairs','mdi:balcony','mdi:ceiling-light','mdi:lightbulb',
+        'mdi:trash-can','mdi:trash-can-outline','mdi:toolbox-outline','mdi:hammer-wrench','mdi:clipboard-check-outline',
+        'mdi:grass','mdi:tree','mdi:watering-can-outline','mdi:leaf','mdi:lawn-mower','mdi:shovel','mdi:wheelbarrow',
+        'mdi:paw','mdi:dog','mdi:cat',
+        'mdi:clipboard-edit-outline','mdi:calendar-range','mdi:calendar-today','mdi:check-circle-outline','mdi:playlist-check'
+      ];
+
+      ICON_POOL = [...new Set([...used, ...seed])];
+      return ICON_POOL;
+    }
+
+    /** --------------- Icon-Picker an ein Input hängen --------------- **/
+    function attachIconPicker(input){
+      if (input.__pickerAttached) return;
+      input.__pickerAttached = true;
+
+      const wrap = document.createElement('div');
+      wrap.className = 'icon-picker-wrap';
+      input.parentNode.insertBefore(wrap, input);
+      wrap.appendChild(input);
+
+      const preview = document.createElement('div');
+      preview.className = 'icon-preview';
+      preview.innerHTML = `<iconify-icon icon="${(input.value||'mdi:check')}"></iconify-icon>`;
+      wrap.appendChild(preview);
+
+      const dd = document.createElement('div');
+      dd.className = 'icon-dd';
+      dd.innerHTML = `
+        <input class="search" type="text" placeholder="Icon suchen (z. B. 'mdi:toilet' oder 'toil')" />
+        <div class="icon-list" role="listbox" aria-label="Iconliste"></div>
+      `;
+      wrap.appendChild(dd);
+
+      preview.addEventListener('click', ()=> dd.classList.toggle('open') );
+      document.addEventListener('click', (e)=>{ if(!wrap.contains(e.target)) dd.classList.remove('open'); });
+
+      function updatePreview(){
+        const v = (input.value||'').trim() || 'mdi:check';
+        preview.innerHTML = `<iconify-icon icon="${v}"></iconify-icon>`;
+      }
+      input.addEventListener('input', updatePreview);
+      updatePreview();
+
+      let pool = [];
+      const search = dd.querySelector('.search');
+      const list  = dd.querySelector('.icon-list');
+
+      function renderList(items){
+        list.innerHTML = '';
+        items.slice(0, 300).forEach(name=>{
+          const el = document.createElement('div');
+          el.className = 'icon-item';
+          el.innerHTML = `
+            <iconify-icon icon="${name}"></iconify-icon>
+            <span class="icon-name">${name}</span>
+          `;
+          el.addEventListener('click', ()=>{
+            input.value = name;
+            updatePreview();
+            dd.classList.remove('open');
+            input.dispatchEvent(new Event('change', {bubbles:true}));
+          });
+          list.appendChild(el);
+        });
+      }
+
+      function filter(q){
+        q = (q||'').trim().toLowerCase();
+        if(!q){ renderList(pool); return; }
+        const starts = [], contains = [];
+        for(const n of pool){
+          const s = n.toLowerCase();
+          if(s.startsWith(q)) starts.push(n);
+          else if(s.includes(q)) contains.push(n);
+        }
+        renderList([...starts, ...contains]);
+      }
+
+      loadIconPool().then(arr=>{ pool = arr; renderList(pool); });
+
+      search.addEventListener('input', ()=> filter(search.value) );
+
+      input.addEventListener('focus', ()=>{
+        dd.classList.add('open');
+        if(search.value !== input.value){ search.value = input.value; filter(search.value); }
+        search.focus({preventScroll:true});
+      });
+      input.addEventListener('input', ()=>{
+        if(!dd.classList.contains('open')) dd.classList.add('open');
+        search.value = input.value;
+        filter(search.value);
+      });
+    }
+  </script>
+</body>
+</html>
