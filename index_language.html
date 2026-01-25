@@ -982,7 +982,7 @@ editMap.forEach(([id,key])=>{
           header.innerHTML = `
             <div class="area-toggle" role="button" aria-expanded="${!isCollapsed}" aria-controls="grid-${cssId(area)}">
               <iconify-icon class="chev" icon="mdi:chevron-down"></iconify-icon>
-              <div class="area-title"><iconify-icon icon="mdi:home-floor-l"></iconify-icon>${escapeHtml(area)}</div>
+              <div class="area-title">${escapeHtml(area)}</div>
               <span class="badge" title="${escapeHtml(t('entries'))}">${byArea.get(area).length} ${escapeHtml(t('entries'))}</span>
             </div>
           `;
