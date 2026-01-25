@@ -10,7 +10,7 @@ This single-file web app (`index_language.html`) is a **Cleaning Schedule** UI t
   - Quick search over *Task* and *Area*
   - Time-range filter (e.g. overdue, next 3/5/7/14 days, all)
 - **Add & edit dialogs**
-  - Create new tasks or edit existing ones (fields: Area, Task, Frequency, Icon, Last done, Next due date, Importance)
+  - Create new tasks or edit existing ones (fields: Area, Task, Frequency, Icon, Last done, Next due date)
   - Optional **Icon picker** using Iconify (supports `mdi:*`)
 - **Theming**
   - Dark / Light / System theme toggle (remembers your choice)
@@ -43,27 +43,27 @@ Installation
 ------------
 
 1. Place the file
-   Copy `index_(your language).html` into a subfolder of `/config/www`, for example:
+   Copy `index_language.html` into a subfolder of `/config/www`, for example:
    /config/www/myownstuff/Putzplan/index_language.html  (Putzplan means cleaning schedule in german, as i'm german)
 
 2. Edit the file
-   Open `index_(your language).html` in a text editor and adjust:
+   Open `index_language.html` in a text editor and adjust:
+   
+   - Line 170: Point to your `data.updated.js` file:
+     window.BASE_PATH = "/local/myownstuff/Putzplan/"; // adjust to your subfolder
+     
+   - Line 173: Set your Home Assistant IP or URL:
+     window.HA_ORIGIN = 'http://192.168.178.38:8123'; // adjust to your set up
 
-   - Line 156: Set your Home Assistant IP or URL:
-     const HA_ORIGIN = "http://192.168.1.10:8123"; // adjust to your set up
-
-   - Line 166: Point to your `data.updated.js` file:
-     const abs = `${getHaOrigin()}/local/myownstuff/Putzplan/data.updated.js`; // adjust to your subfolder
-
-   - Line 171 (optional): Change the webhook ID if desired: // if changed: remember the changed ID
-     const WEBHOOK_ID = "putzplan_export";
+   - Line 181 (optional): Change the webhook ID if desired: // if changed: remember the changed ID
+     const webhookUrl = `${getHaOrigin()}/api/webhook/putzplan_export`;
 
    Example folder structure:
    /config/www/myownstuff/Putzplan/
-   ├─ index_(your language).html
+   ├─ index_language.html
    └─ data.updated.js   (created later, automatically)
 
-3. Add the following in your configuration.yaml (adjust the dir-folder if needed):
+4. Add the following in your configuration.yaml (adjust the dir-folder if needed):
 
    shell_command:
      putzplan_save: >-
@@ -72,7 +72,7 @@ Installation
        mkdir -p "$dir";
        echo "{{ content_b64 }}" | base64 -d > "$file"'
 
-4. Update automations.yaml and Make sure webhook_id matches your HTML file:
+5. Update automations.yaml and Make sure webhook_id matches your HTML file:
 
    - alias: "Webhook: putzplan_export"
      trigger:
@@ -84,14 +84,14 @@ Installation
            filename: "{{ trigger.json.filename }}"
            content_b64: "{{ trigger.json.content_b64 }}"
 
-5. Restart Home Assistant
+6. Restart Home Assistant
    - Go to Settings → System → Restart or reload Automations/Shell Commands if available.
    - Validate your YAML before restarting.
 
 Access
 ------
 Open in a browser:  http://<YOUR_HA_IP>:8123/local/myownstuff/Putzplan/index_language.html
-Or use an iframe card with this URL: e.g. "/local/myownstuff/Putzplan/index_en.html"
+Or use an iframe card with this URL: e.g. "/local/myownstuff/Putzplan/index_language.html"
 
 
 
