@@ -43,16 +43,7 @@
     .badge{font-size:12px;color:var(--muted);border:1px solid var(--border-alt);border-radius:999px;padding:2px 8px}
     .chev{transition:transform .2s ease}
     .collapsed .chev{transform:rotate(-90deg)}
-   .grid {
-  display: grid;
-  gap: 14px;
-  /* Maximale Breite der Kacheln automatisch anpassen */
-  grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
-  /* Nutzung der gesamten Bildschirmbreite */
-  width: 100%;
-  /* Optional: Zentrieren des gesamten Grids, falls gewünscht */
-  justify-items: center;
-}
+    .grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:14px}
     .grid.is-collapsed{display:none}
     .card{background:linear-gradient(180deg,var(--panel),var(--panel-2));border:1px solid var(--border);border-radius:var(--card-radius);box-shadow:var(--shadow);display:flex;flex-direction:column;padding:10px;gap:8px;position:relative;overflow:hidden}
     .card .top{display:flex;gap:10px;align-items:center}
