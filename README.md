@@ -39,19 +39,19 @@ This single-file web app (`index_language.html`) is a **Cleaning Schedule** UI t
       file="$dir/data.updated.js";
       mkdir -p "$dir";
       echo "{{ content_b64 }}" | base64 -d > "$file"'
-``
-  - And in automation.yaml 
-```yaml
-  - alias: "Webhook: putzplan_export"
-  trigger:
-    - platform: webhook
-      webhook_id: putzplan_export
-  action:
-    - service: shell_command.putzplan_save
-      data:
-        filename: "{{ trigger.json.filename }}"
-        content_b64: "{{ trigger.json.content_b64 }}"
-```
+    ```
+- And in automation.yaml 
+    ```yaml
+    - alias: "Webhook: putzplan_export"
+    trigger:
+      - platform: webhook
+        webhook_id: putzplan_export
+    action:
+      - service: shell_command.putzplan_save
+        data:
+          filename: "{{ trigger.json.filename }}"
+          content_b64: "{{ trigger.json.content_b64 }}"
+    ```
 
 Note:
 -----
@@ -63,9 +63,11 @@ Installation
 
 1. Place the file
    Copy `index_language.html` into a subfolder of `/config/www`, for example:
-   /config/www/myownstuff/Putzplan/index_language.html  (Putzplan means cleaning schedule in german, as i'm german)
+   
+   /config/www/myownstuff/Putzplan/index_language.html
+   (Putzplan means cleaning schedule in german, as i'm german)
 
-2. Edit the file
+3. Edit the file
    Open `index_language.html` in a text editor and adjust:
    
    - Line 226: Point to your `data.updated.js` file:
@@ -82,30 +84,28 @@ Installation
    ├─ index_language.html
    └─ data.updated.js   (created later, automatically)
 
-4. Add the following in your configuration.yaml (adjust the dir-folder if needed):
+4. Add the following in your `configuration.yaml` (adjust the dir-folder if needed):
+    ```yaml
+    shell_command:
+      putzplan_save: >-
+        sh -c 'dir="/config/www/myownstuff/Putzplan";
+        file="$dir/data.updated.js";
+        mkdir -p "$dir";
+        echo "{{ content_b64 }}" | base64 -d > "$file"'
+    ```
 
-     ```yaml
-  shell_command:
-    putzplan_save: >-
-      sh -c 'dir="/config/www/myownstuff/Putzplan";
-      file="$dir/data.updated.js";
-      mkdir -p "$dir";
-      echo "{{ content_b64 }}" | base64 -d > "$file"'
-``
-
-5. Update automations.yaml and Make sure webhook_id matches your HTML file:
-
-```yaml
-  - alias: "Webhook: putzplan_export"
-  trigger:
-    - platform: webhook
-      webhook_id: putzplan_export
-  action:
-    - service: shell_command.putzplan_save
-      data:
-        filename: "{{ trigger.json.filename }}"
-        content_b64: "{{ trigger.json.content_b64 }}"
-```
+5. Update automations.yaml and Make sure webhook_id matches  with the webhhok_id in the HTML file:
+    ```yaml
+    - alias: "Webhook: putzplan_export"
+    trigger:
+      - platform: webhook
+        webhook_id: putzplan_export
+    action:
+      - service: shell_command.putzplan_save
+        data:
+          filename: "{{ trigger.json.filename }}"
+          content_b64: "{{ trigger.json.content_b64 }}"
+    ```
 
 6. Restart Home Assistant
    - Go to Settings → System → Restart or reload Automations/Shell Commands if available.
