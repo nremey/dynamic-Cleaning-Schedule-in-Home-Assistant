@@ -3,7 +3,7 @@ This single-file web app (`index_language.html`) is a **Cleaning Schedule** UI t
 ### Key features
 - **Task dashboard**
   - Grouped by *Area* with collapsible sections
-  - Cards show: Task, Frequency (days), Last done date, Next due date, and “Due in … days”
+  - Cards show: Task, Frequency (days, weeks, months), Last done date, Next due date, and “Due in … days”
   - Click the task icon to mark *done* → updates dates to today and recalculates next due date
 - **Sorting & filtering**
   - Sort by *due date* or *alphabetical*
@@ -11,6 +11,12 @@ This single-file web app (`index_language.html`) is a **Cleaning Schedule** UI t
   - Time-range filter (e.g. overdue, next 3/5/7/14 days, all)
 - **Add & edit dialogs**
   - Create new tasks or edit existing ones (fields: Area, Task, Frequency, Icon, Last done, Next due date)
+  - Task rhythms can be defined in days, weeks, or months
+  - Per-task month rules:
+    - Ignore months entirely, or
+    - Restrict execution to selected months
+  - Editing a task recalculates all due dates automatically using the current rules
+  - Tasks can be edited at any time; rule changes are applied automatically
   - Optional **Icon picker** using Iconify (supports `mdi:*`)
 - **Theming**
   - Dark / Light / System theme toggle (remembers your choice)
@@ -49,13 +55,13 @@ Installation
 2. Edit the file
    Open `index_language.html` in a text editor and adjust:
    
-   - Line 170: Point to your `data.updated.js` file:
+   - Line 226: Point to your `data.updated.js` file:
      window.BASE_PATH = "/local/myownstuff/Putzplan/"; // adjust to your subfolder
      
-   - Line 173: Set your Home Assistant IP or URL:
+   - Line 229: Set your Home Assistant IP or URL:
      window.HA_ORIGIN = 'http://192.168.178.38:8123'; // adjust to your set up
 
-   - Line 181 (optional): Change the webhook ID if desired: // if changed: remember the changed ID
+   - Line 237 (optional): Change the webhook ID if desired: // if changed: remember the changed ID
      const webhookUrl = `${getHaOrigin()}/api/webhook/putzplan_export`;
 
    Example folder structure:
