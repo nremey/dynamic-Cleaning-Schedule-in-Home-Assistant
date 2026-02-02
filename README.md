@@ -41,7 +41,7 @@ This single-file web app (`index_language.html`) is a **Cleaning Schedule** UI t
       echo "{{ content_b64 }}" | base64 -d > "$file"'
 ``
   - And in automation.yaml 
-```y
+```yaml
   - alias: "Webhook: putzplan_export"
   trigger:
     - platform: webhook
@@ -84,24 +84,28 @@ Installation
 
 4. Add the following in your configuration.yaml (adjust the dir-folder if needed):
 
-   shell_command:
-     putzplan_save: >-
-       sh -c 'dir="/config/www/myownstuff/Putzplan";
-       file="$dir/data.updated.js";
-       mkdir -p "$dir";
-       echo "{{ content_b64 }}" | base64 -d > "$file"'
+     ```yaml
+  shell_command:
+    putzplan_save: >-
+      sh -c 'dir="/config/www/myownstuff/Putzplan";
+      file="$dir/data.updated.js";
+      mkdir -p "$dir";
+      echo "{{ content_b64 }}" | base64 -d > "$file"'
+``
 
 5. Update automations.yaml and Make sure webhook_id matches your HTML file:
 
-   - alias: "Webhook: putzplan_export"
-     trigger:
-       - platform: webhook
-         webhook_id: putzplan_export
-     action:
-       - service: shell_command.putzplan_save
-         data:
-           filename: "{{ trigger.json.filename }}"
-           content_b64: "{{ trigger.json.content_b64 }}"
+```yaml
+  - alias: "Webhook: putzplan_export"
+  trigger:
+    - platform: webhook
+      webhook_id: putzplan_export
+  action:
+    - service: shell_command.putzplan_save
+      data:
+        filename: "{{ trigger.json.filename }}"
+        content_b64: "{{ trigger.json.content_b64 }}"
+```
 
 6. Restart Home Assistant
    - Go to Settings → System → Restart or reload Automations/Shell Commands if available.
