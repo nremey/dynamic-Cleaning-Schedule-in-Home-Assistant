@@ -39,6 +39,7 @@ This single-file web app (`index_language.html`) is a **Cleaning Schedule** UI t
       file="$dir/data.updated.js";
       mkdir -p "$dir";
       echo "{{ content_b64 }}" | base64 -d > "$file"'
+``
   - And in automation.yaml 
 ```y
   - alias: "Webhook: putzplan_export"
@@ -50,6 +51,7 @@ This single-file web app (`index_language.html`) is a **Cleaning Schedule** UI t
       data:
         filename: "{{ trigger.json.filename }}"
         content_b64: "{{ trigger.json.content_b64 }}"
+```
 
 Note:
 -----
