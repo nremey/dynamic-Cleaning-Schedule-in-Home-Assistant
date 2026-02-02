@@ -11,6 +11,13 @@ This single-file web app (`index_language.html`) is a **Cleaning Schedule** UI t
   - Time-range filter (e.g. overdue, next 3/5/7/14 days, all)
 - **Add & edit dialogs**
   - Create new tasks or edit existing ones (fields: Area, Task, Frequency, Icon, Last done, Next due date)
+  - Create new tasks or edit existing ones (fields: Area, Task, Rhythm, Rhythm unit, Icon, Last done, Next due date, Month rules)
+  - Task rhythms can be defined in days, weeks, or months
+  - Per-task month rules:
+    - Ignore months entirely, or
+    - Restrict execution to selected months
+  - Editing a task recalculates all due dates automatically using the current rules
+  - Tasks can be edited at any time; rule changes are applied automatically
   - Optional **Icon picker** using Iconify (supports `mdi:*`)
 - **Theming**
   - Dark / Light / System theme toggle (remembers your choice)
@@ -39,23 +46,25 @@ Note:
 Files under `/config/www` are accessible at `/local/...` in Home Assistant.
 The file must be named `index_language.html` (with underscore).
 
-Installation
+"Installation - or How To Make It Work"
 ------------
 
 1. Place the file
    Copy `index_language.html` into a subfolder of `/config/www`, for example:
-   /config/www/myownstuff/Putzplan/index_language.html  (Putzplan means cleaning schedule in german, as i'm german)
+   /config/www/myownstuff/Putzplan/index_language.html  
+  keep the folderpath and name in mind. 
+  (Putzplan means cleaning schedule in german, as i'm german)
 
 2. Edit the file
    Open `index_language.html` in a text editor and adjust:
    
-   - Line 170: Point to your `data.updated.js` file:
+   - Line 226: Point to your `data.updated.js` file:
      window.BASE_PATH = "/local/myownstuff/Putzplan/"; // adjust to your subfolder
      
-   - Line 173: Set your Home Assistant IP or URL:
+   - Line 229: Set your Home Assistant IP or URL:
      window.HA_ORIGIN = 'http://192.168.178.38:8123'; // adjust to your set up
 
-   - Line 181 (optional): Change the webhook ID if desired: // if changed: remember the changed ID
+   - Line 237 (optional): Change the webhook ID if desired: // if changed: remember the changed ID
      const webhookUrl = `${getHaOrigin()}/api/webhook/putzplan_export`;
 
    Example folder structure:
