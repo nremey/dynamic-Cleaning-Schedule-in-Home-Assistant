@@ -107,4 +107,6 @@ Testing
 - Changes (new tasks, edit task, erase task, checked tasks) triggers the webhook.
 - data.updated.js will be created/updated in the target folder.
 
-<img alt="Cleaning_schedule_start" src="https://github.com/user-attachments/assets/08982913-bf30-4062-b084-eeeb10b8c171" />
+<img width="617" height="822" alt="GUI: add/edit Tasks " src="https://github.com/user-attachments/assets/97af3b14-57ca-4b33-939c-c0b1b823ddb8" />
+<img width="1762" height="896" alt="My setup example" src="https://github.com/user-attachments/assets/b8831cad-8a61-4393-8d02-7ff24496ac60" />
+
