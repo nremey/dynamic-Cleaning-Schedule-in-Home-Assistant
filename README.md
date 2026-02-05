@@ -127,3 +127,20 @@ Testing
 <img width="617" height="822" alt="GUI: add/edit Tasks " src="https://github.com/user-attachments/assets/97af3b14-57ca-4b33-939c-c0b1b823ddb8" />
 <img width="1762" height="896" alt="My setup example" src="https://github.com/user-attachments/assets/b8831cad-8a61-4393-8d02-7ff24496ac60" />
 
+
+##Beta Version Preview
+-------
+- HA- Sensor is used as indicator for tasks state (due/done) by text/number rules (single Sensor only)
+- Customizable CSS Design with GUI and Colorpicker, still some manual steps are needed
+- warning if Sensor doesn't exists, Colored Highlight of whole card coloe (default: red) in the dashboard
+- warning if Sensor State is in conflict with due/done-ruling or not avaiable; Colored Highlight of whole card coloe (default: light purple) in the dashboard
+- friendly sensor name, value and unit are displayed within task-card
+- pending (not yet implied): sorting issues of tasks by due-done order and warning-state
+
+<img width="992" height="909" alt="View of new css-style GUI" src="https://github.com/user-attachments/assets/37ad066f-9605-44f4-bbe3-ceff97c3c6fb" />
+<img width="1555" height="344" alt="Example of new task card of SensorReading" src="https://github.com/user-attachments/assets/abb5d603-dfce-40e9-87dc-f9d8d9689815" />
+<img width="762" height="353" alt="Snippet of the task-editor with sensor and ruling example" src="https://github.com/user-attachments/assets/821e753a-df23-4ef8-94d4-a6a9d1548ed2" />
+
+
+
+
