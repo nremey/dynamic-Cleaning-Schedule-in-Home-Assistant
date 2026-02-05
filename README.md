@@ -130,11 +130,13 @@ Testing
 
 ##Beta Version Preview
 -------
-- HA- Sensor is used as indicator for tasks state (due/done) by text/number rules (single Sensor only)
 - Customizable CSS Design with GUI and Colorpicker, still some manual steps are needed (only in english)
+- HA- Sensor is used as indicator for tasks state (due/done) by text/number rules (single Sensor only)
 - warning if Sensor doesn't exists, Colored Highlight of whole card color (default: red) in the dashboard
 - warning if Sensor State is in conflict with due/done-ruling or not avaiable; Colored Highlight of whole card color (default: light purple) in the dashboard
 - friendly sensor name, value and unit are displayed within task-card
+- done: check if ruling definition is not in conflict with itself (alert to user)
+- Normalizing sensor state strings: Trailing spaces and case variations in sensor states are now automatically handled. For example, values like "On", "on", "ON", "true", "TRUE", "True", "true " are treated as equivalent, as well as "off", "Off", "OFF", "False", "FALSE", and "false".  
 - pending (not yet implied): sorting issues of tasks by due-done order and warning-state
 
 <img width="992" height="909" alt="View of new css-style GUI" src="https://github.com/user-attachments/assets/37ad066f-9605-44f4-bbe3-ceff97c3c6fb" />
