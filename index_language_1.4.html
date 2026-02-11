@@ -29,9 +29,14 @@
         }
 
         window.__ppExportInProgress = false;
+        window.__ppHasUnsavedChanges = false;
 
         function reloadUpdatedScriptAndRender(){
           if(window.__ppExportInProgress) return;
+          if (window.__ppHasUnsavedChanges) {
+            doExport('auto-reload');
+            return;
+          }
 
           const old = document.getElementById('data-js');
           const fresh = document.createElement('script');
@@ -612,7 +617,7 @@ html[data-theme="light"] .ce-row{ border-bottom: 1px solid rgba(15,23,42,.06); }
           syncRunning:'Sync läuft…',
           syncDone:'Sync fertig',
           syncError:'Sync Fehler',
-          prefsSave:'Nutzereinstellungen speichern',
+          prefsSave:'Prefs speichern',
           prefsSaveTitle:'Einstellungen speichern',
         },
         en: {
@@ -707,7 +712,7 @@ html[data-theme="light"] .ce-row{ border-bottom: 1px solid rgba(15,23,42,.06); }
           syncRunning:'Sync running…',
           syncDone:'Sync done',
           syncError:'Sync failed',
-          prefsSave:'Save preferences',
+          prefsSave:'Save prefs',
           prefsSaveTitle:'Save preferences',
         }
       };
@@ -738,7 +743,7 @@ html[data-theme="light"] .ce-row{ border-bottom: 1px solid rgba(15,23,42,.06); }
       	}catch{}
       }
 
-      clearTaskCacheOnLoad();
+      // clearTaskCacheOnLoad();
 
       const syncStatusEl = document.getElementById('sync-status');
       let __syncTimer = null;
@@ -1404,20 +1409,19 @@ function loadUserThemeCss(){
       }
   	
   	
-  	function ensureUids(){
-  		if (!Array.isArray(window.TABLE_DATA)) return;
-  		for (const r of window.TABLE_DATA) {
-  			if (!r.__uid) r.__uid = uid();
-  			if (!Array.isArray(r.__history)) {
-  				const init = (r['Last done [Date]'] && String(r['Last done [Date]']).trim())
-  				? [r['Last done [Date]']]
-  				: [];
-  				r.__history = init;
-  			}
-  			if (typeof r.Notes !== 'string') r.Notes = '';
-			if (typeof r.WeekMask === 'undefined') r.WeekMask = WEEK_MASK_ALL;
+	function ensureUids(){
+		if (!Array.isArray(window.TABLE_DATA)) return;
+		for (const r of window.TABLE_DATA) {
+			if (!r.__uid) r.__uid = uid();
+			if (!Array.isArray(r.__history)) {
+				const init = (r['Last done [Date]'] && String(r['Last done [Date]']).trim())
+				? [r['Last done [Date]']]
+				: [];
+				r.__history = init;
+			}
+			if (typeof r.Notes !== 'string') r.Notes = '';
 		}
- 	}
+	}
   
   
 
@@ -1477,7 +1481,8 @@ function loadUserThemeCss(){
       	const ov = getOverrides();
       	rows.forEach(r=>{
       		const key = makeId(r);
-      		if(ov[key]) Object.assign(r, ov[key]);
+      		const patch = ov[key] || null;
+      		if(patch) Object.assign(r, patch);
       		if (!Array.isArray(r.__history)) r.__history = [];
       		if (typeof r.Notes !== 'string') r.Notes = '';
       		recompute(r);
@@ -1570,30 +1575,32 @@ function loadUserThemeCss(){
     	saveUiState({ calRef: toISO(d) });
     }
     
-    async function doExport(reason){
-        if (window.__ppExportInProgress) return;
-        window.__ppExportInProgress = true;
-        setSyncStatus('syncRunning');
-        try{
+        window.doExport = async function doExport(reason){
+          if (window.__ppExportInProgress) return;
+          window.__ppExportInProgress = true;
+          setSyncStatus('syncRunning');
+          try{
           const base = Array.isArray(window.TABLE_DATA) ? JSON.parse(JSON.stringify(window.TABLE_DATA)) : [];
           const rows = applyOverrides(base).map(r => recompute(r));
-          const jsContent = 'window.TABLE_DATA = ' + JSON.stringify(rows, null, 2) + ';\n';
-          const content_b64 = btoa(unescape(encodeURIComponent(jsContent)));
-          await callWebhook({ filename: 'data.updated.js', content_b64 });
-          reloadUpdatedScriptAndRender();
-          setSyncStatus('syncDone');
-        } catch (e) {
-          setSyncStatus('syncError');
-          throw e;
-        } finally {
-          window.__ppExportInProgress = false;
-        }
-      }
+            const jsContent = 'window.TABLE_DATA = ' + JSON.stringify(rows, null, 2) + ';\n';
+            const content_b64 = btoa(unescape(encodeURIComponent(jsContent)));
+            await callWebhook({ filename: 'data.updated.js', content_b64 });
+            reloadUpdatedScriptAndRender();
+            setSyncStatus('syncDone');
+          } catch (e) {
+            setSyncStatus('syncError');
+            throw e;
+          } finally {
+            window.__ppExportInProgress = false;
+            window.__ppHasUnsavedChanges = false;
+          }
+        };
 
       let __exportTimer = null;
       function scheduleExport(reason='change'){
         clearTimeout(__exportTimer);
         setSyncStatus('syncRunning');
+        window.__ppHasUnsavedChanges = true;
         __exportTimer = setTimeout(()=>{ doExport(reason); }, 400);
       }
       exportBtn.addEventListener('click', ()=>{ doExport('button'); });
@@ -2688,9 +2695,11 @@ if (EntityConnector.enabled) {
     		if (notesEl) notesEl.value = row.Notes || '';
     		form.elements['Rhythmen'].value = Number.isFinite(Number(row.Rhythmen)) ? Number(row.Rhythmen) : 0;
     		form.elements['RhythmUnit'].value = normalizeUnit(row.RhythmUnit || 'd');
+    		
     		const mm = document.getElementById('edit-monthmask');
     		const grid = document.getElementById('edit-month-grid');
     		if (mm && grid) renderMonthGrid(grid, mm, normalizeMonthMask(row.MonthMask));
+    		
     		const wm = document.getElementById('edit-weekmask');
     		const wgrid = document.getElementById('edit-week-grid');
     		if (wm && wgrid) renderWeekGrid(wgrid, wm, normalizeWeekMask(row.WeekMask));
@@ -2790,14 +2799,12 @@ if (EntityConnector.enabled) {
 			
 			let finalDue = null;
 			
-			if (last) {
+			if (manual) {
+				finalDue = shiftToAllowedDate(manual, updated.MonthMask, updated.WeekMask);
+			} else if (last) {
 				const calcRaw = addByRhythm(last, updated.Rhythmen || 0, updated.RhythmUnit);
     			const calcDue = shiftToAllowedDate(calcRaw, updated.MonthMask, updated.WeekMask);
-				if (manual) {
-					finalDue = (calcDue > manual) ? calcDue : manual;
-				} else {
-					finalDue = calcDue;
-				}
+				finalDue = calcDue;
 			} else {
 				finalDue = manual; // wenn kein last da ist, bleibt manual
 			}
