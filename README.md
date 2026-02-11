@@ -164,7 +164,8 @@ Testing
   - Added per-user preferences save button and load from prefs.<friendlyname>.json.
 	- manually saving requiered (working on an webhook-definition for automated saving of user-settings)
 	- Preferences include language, view, sort, and theme (dark/light).
-<img width="1531" height="781" alt="view Calendar week" src="https://github.com/user-attachments/assets/3e8c005a-9685-4e5b-8788-e2f0b00f92fc" />
+
+<img width="1531" height="781" alt="view Calendar week" src="https://github.com/user-attachments/assets/44380fb3-5a8d-4c4a-a710-001464a116d3" />
 
 
 ## Known issues (to be addressed in upcoming versions):
