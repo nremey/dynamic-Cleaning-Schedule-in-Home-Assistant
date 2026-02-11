@@ -164,8 +164,8 @@ Testing
   - Added per-user preferences save button and load from prefs.<friendlyname>.json.
 	- manually saving requiered (working on an webhook-definition for automated saving of user-settings)
 	- Preferences include language, view, sort, and theme (dark/light).
+<img width="1531" height="781" alt="view Calendar week" src="https://github.com/user-attachments/assets/3e8c005a-9685-4e5b-8788-e2f0b00f92fc" />
 
-<img width="1531" height="781" alt="image" src="https://github.com/user-attachments/assets/5b6d89d6-a822-4594-b79f-90037c23d5d6" />
 
 ## Known issues (to be addressed in upcoming versions):
 - The calendar view (week and month) looks poor on small screens. There’s no nicer way to put it. A list-style calendar view for small devices is planned for the next version.
