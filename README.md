@@ -172,4 +172,5 @@ Testing
 - Saving CSS themes or user default settings currently requires additional steps (likely an updated/additional webhook configuration in YAML will be required). This is also in preparation for future user handling and gamification features.
 - Having many tasks — either in the overdue section or grouped within a single day — can distort the month layout.
 It’s unclear whether this is primarily a layout limitation or simply an edge case caused by an excessive number of overdue tasks (not that this would ever happen to me, of course 😉).
+- from version 1.2 pending (still not yet implied): sorting issues of state indicated tasks by due-done order and warning-state
 
