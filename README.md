@@ -58,7 +58,7 @@ Note:
 Files under `/config/www` are accessible at `/local/...` in Home Assistant.
 The file must be named `index_language.html` (with underscore).
 
-Installation
+Installation (As of Version 1.4)
 ------------
 
 1. Place the file
@@ -68,15 +68,15 @@ Installation
    (Putzplan means cleaning schedule in german, as i'm german)
 
 3. Edit the file
-   Open `index_language.html` in a text editor and adjust:
+   Open `index_language_<versionnumber>.html` in a text editor and adjust:
    
-   - Line 226: Point to your `data.updated.js` file:
+   - Line 9: Point to your `data.updated.js` file:
      window.BASE_PATH = "/local/myownstuff/Putzplan/"; // adjust to your subfolder
      
-   - Line 229: Set your Home Assistant IP or URL:
+   - Line 12: Set your Home Assistant IP or URL:
      window.HA_ORIGIN = 'http://192.168.178.38:8123'; // adjust to your set up
 
-   - Line 237 (optional): Change the webhook ID if desired: // if changed: remember the changed ID
+   - Line 20 (optional): Change the webhook ID if desired: // if changed: remember the changed ID
      const webhookUrl = `${getHaOrigin()}/api/webhook/putzplan_export`;
 
    Example folder structure:
@@ -128,7 +128,7 @@ Testing
 <img width="1762" height="896" alt="My setup example" src="https://github.com/user-attachments/assets/b8831cad-8a61-4393-8d02-7ff24496ac60" />
 
 
-##Beta Version Preview
+##Beta Version 1.2
 -------
 - Customizable CSS Design with GUI and Colorpicker, still some manual steps are needed (only in english)
 - HA- Sensor is used as indicator for tasks state (due/done) by text/number rules (single Sensor only)
@@ -143,6 +143,33 @@ Testing
 <img width="1555" height="344" alt="Example of new task card of SensorReading" src="https://github.com/user-attachments/assets/abb5d603-dfce-40e9-87dc-f9d8d9689815" />
 <img width="762" height="353" alt="Snippet of the task-editor with sensor and ruling example" src="https://github.com/user-attachments/assets/821e753a-df23-4ef8-94d4-a6a9d1548ed2" />
 
+## (Beta) Version 1.4
+- shifting of the <script>-part up top for Installation step 1.4
+- Added calendar week/month views with navigation and overdue sidebar in calendar layout.
+- Calendar view (not recommended on small screens):
+	- view ignores range (days) filter; overdue items are listed separately.
+	- Calendar items are compact, no Icons shown.
+	- Enabled drag-and-drop to move tasks between calendar days (updates due date).
 
+- Added fixed weekdays (WeekMask) for tasks; recalculation shifts to the next allowed weekday (combined with month rules).
+- Added weekday selectors to add/edit dialogs and defaults.
 
+- Display Home Assistant friendly name below the header as "custom style of:".
+- Theme CSS filenames now use the Home Assistant friendly name (fallback: id, default).
+
+- Unified debounced exports and added a sync status indicator.
+- Clear task cache on reload while keeping header preferences (view/filter/etc.).
+
+- user preferences were shifted to a burger Menu (css styling, saving of preferences)
+  - Added per-user preferences save button and load from prefs.<friendlyname>.json.
+	- manually saving requiered (working on an webhook-definition for automated saving of user-settings)
+	- Preferences include language, view, sort, and theme (dark/light).
+
+<img width="1531" height="781" alt="image" src="https://github.com/user-attachments/assets/5b6d89d6-a822-4594-b79f-90037c23d5d6" />
+
+## Known issues (to be addressed in upcoming versions):
+- The calendar view (week and month) looks poor on small screens. There’s no nicer way to put it. A list-style calendar view for small devices is planned for the next version.
+- Saving CSS themes or user default settings currently requires additional steps (likely an updated/additional webhook configuration in YAML will be required). This is also in preparation for future user handling and gamification features.
+- Having many tasks — either in the overdue section or grouped within a single day — can distort the month layout.
+It’s unclear whether this is primarily a layout limitation or simply an edge case caused by an excessive number of overdue tasks (not that this would ever happen to me, of course 😉).
 
