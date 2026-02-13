@@ -786,6 +786,13 @@ html[data-theme="light"] .ce-row{ border-bottom: 1px solid rgba(15,23,42,.06); }
           userTabUsers:'Nutzer',
           userTabMapping:'HA Zuordnung',
           userTabColors:'Farben',
+          userSectionUserData:'Nutzerdaten',
+          userSectionExistingUsers:'Bestehende Nutzer',
+          userSectionMappingEdit:'HA Zuordnung bearbeiten',
+          userSectionExistingMappings:'Bestehende Zuordnungen',
+          userSectionColors:'Farbmanagement',
+          userAliasRolePlaceholder:'Familie',
+          activeUserPrefix:'Aktiver Nutzer',
           assigneeLabel:'Sichtbar für (Nutzer, Rollen oder Gruppen; leer = alle)',
           assigneePlaceholder:'z. B. Alex, parent, Familie',
         },
@@ -912,6 +919,13 @@ html[data-theme="light"] .ce-row{ border-bottom: 1px solid rgba(15,23,42,.06); }
           userTabUsers:'Users',
           userTabMapping:'HA mapping',
           userTabColors:'Colors',
+          userSectionUserData:'User data',
+          userSectionExistingUsers:'Existing users',
+          userSectionMappingEdit:'Edit HA mapping',
+          userSectionExistingMappings:'Existing mappings',
+          userSectionColors:'Color management',
+          userAliasRolePlaceholder:'Family',
+          activeUserPrefix:'Active user',
           assigneeLabel:'Visible for (users, roles, or groups; empty = all)',
           assigneePlaceholder:'e.g. Alex, parent, Family',
         }
@@ -931,7 +945,7 @@ html[data-theme="light"] .ce-row{ border-bottom: 1px solid rgba(15,23,42,.06); }
       }
 
       function t(key){ return (I18N[lang] && I18N[lang][key]) ? I18N[lang][key] : key; }
-      //window.ppT = t;
+      window.ppT = t;
 
       function clearTaskCacheOnLoad(){
       	try{
@@ -1070,6 +1084,16 @@ function loadUserThemeCss(){
         if (userTabMapping) userTabMapping.textContent = t('userTabMapping');
         const userTabColors = document.getElementById('user-tab-colors');
         if (userTabColors) userTabColors.textContent = t('userTabColors');
+        const userSectionUserData = document.getElementById('user-section-user-data');
+        if (userSectionUserData) userSectionUserData.textContent = t('userSectionUserData');
+        const userSectionExistingUsers = document.getElementById('user-section-existing-users');
+        if (userSectionExistingUsers) userSectionExistingUsers.textContent = t('userSectionExistingUsers');
+        const userSectionMappingEdit = document.getElementById('user-section-mapping-edit');
+        if (userSectionMappingEdit) userSectionMappingEdit.textContent = t('userSectionMappingEdit');
+        const userSectionExistingMappings = document.getElementById('user-section-existing-mappings');
+        if (userSectionExistingMappings) userSectionExistingMappings.textContent = t('userSectionExistingMappings');
+        const userSectionColors = document.getElementById('user-section-colors');
+        if (userSectionColors) userSectionColors.textContent = t('userSectionColors');
         const addAssignLbl = document.getElementById('add-lbl-assign');
         if (addAssignLbl) addAssignLbl.textContent = t('assigneeLabel');
         const editAssignLbl = document.getElementById('edit-lbl-assign');
@@ -1078,6 +1102,9 @@ function loadUserThemeCss(){
         if (addAssignInput) addAssignInput.placeholder = t('assigneePlaceholder');
         const editAssignInput = document.getElementById('edit-assign-input');
         if (editAssignInput) editAssignInput.placeholder = t('assigneePlaceholder');
+        const userAliasRoleInput = document.getElementById('user-alias-role');
+        if (userAliasRoleInput) userAliasRoleInput.placeholder = t('userAliasRolePlaceholder');
+        if (typeof window.PP_UPDATE_COLOR_EDITOR_CONTEXT === 'function') window.PP_UPDATE_COLOR_EDITOR_CONTEXT();
 
         const addTaskBtn = document.getElementById('add-task-btn');
         if(themeBtn) themeBtn.title = t('themeToggleTitle');
@@ -1979,7 +2006,7 @@ function loadUserThemeCss(){
 
       loadUsersJson().finally(()=>{
       	refreshAliasSelect();
-      	if (aliasRole && !aliasRole.value) aliasRole.value = 'Familie';
+      	if (aliasRole && !aliasRole.value) aliasRole.value = t('userAliasRolePlaceholder');
       	if (userState.alias?.roleFilter && aliasRole) aliasRole.value = userState.alias.roleFilter;
       	if (userState.alias?.userId && aliasUser) aliasUser.value = userState.alias.userId;
       	if (userState.alias) {
@@ -4315,7 +4342,7 @@ function accentClassFromEntityStatus(status){
 		<div class="user-panels">
 			<div id="user-panel-users" class="user-tab-panel active" role="tabpanel">
 				<div class="user-section">
-					<h4 class="user-section-title">Nutzerdaten</h4>
+					<h4 class="user-section-title" id="user-section-user-data">Nutzerdaten</h4>
 					<div class="user-mgmt-grid">
 						<label>
 							<span id="user-name-label">Anzeigename</span>
@@ -4345,7 +4372,7 @@ function accentClassFromEntityStatus(status){
 				</div>
 
 				<div class="user-section">
-					<h4 class="user-section-title">Bestehende Nutzer</h4>
+					<h4 class="user-section-title" id="user-section-existing-users">Bestehende Nutzer</h4>
 					<div id="user-list" class="user-list"></div>
 					<div id="user-list-empty" class="user-list-empty">— keine Nutzer —</div>
 				</div>
@@ -4353,7 +4380,7 @@ function accentClassFromEntityStatus(status){
 
 			<div id="user-panel-mapping" class="user-tab-panel" role="tabpanel">
 				<div class="user-section">
-					<h4 class="user-section-title">HA Zuordnung bearbeiten</h4>
+					<h4 class="user-section-title" id="user-section-mapping-edit">HA Zuordnung bearbeiten</h4>
 					<div class="user-mgmt-grid">
 						<label>
 							<span id="user-alias-ha-label">HA Nutzer</span>
@@ -4375,14 +4402,14 @@ function accentClassFromEntityStatus(status){
 				</div>
 
 				<div class="user-section">
-					<h4 class="user-section-title">Bestehende Zuordnungen</h4>
+					<h4 class="user-section-title" id="user-section-existing-mappings">Bestehende Zuordnungen</h4>
 					<div id="user-alias-list" class="device-list"></div>
 				</div>
 			</div>
 
 			<div id="user-panel-colors" class="user-tab-panel" role="tabpanel">
 				<div class="user-section">
-					<h4 class="user-section-title">Color Management</h4>
+					<h4 class="user-section-title" id="user-section-colors">Color Management</h4>
 					<div class="color-editor-toolbar">
 						<button type="button" class="btn ce-active-user" id="ce-active-user-btn">
 							<span id="ce-active-user-avatar" class="user-avatar" aria-hidden="true">?</span>
@@ -4693,7 +4720,8 @@ function accentClassFromEntityStatus(status){
     const active = window.PP_ACTIVE_USER;
     const fallback = getCurrentHaUser();
     const name = active?.name || fallback?.name || fallback?.id || '—';
-    activeUserBtnLabel.textContent = `Aktiver Nutzer: ${name}`;
+    const tt = typeof window.ppT === 'function' ? window.ppT : (k)=>k;
+    activeUserBtnLabel.textContent = `${tt('activeUserPrefix')}: ${name}`;
     if (activeUserAvatar) {
       activeUserAvatar.innerHTML = '';
       if (active?.avatar) {
