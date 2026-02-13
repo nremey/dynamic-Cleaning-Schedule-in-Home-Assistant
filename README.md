@@ -137,7 +137,8 @@ Installation (since Version 1.6)
 5. Restart Home Assistant
    - Go to Settings → System → Restart or reload Automations/Shell Commands if available.
    - Validate your YAML before restarting.
-
+     
+6. If replacing a former version, it is neccesary to Clean Cache of Browser or Companion App of used devices.
 
 Access
 ------
