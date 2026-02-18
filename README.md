@@ -1,5 +1,8 @@
 This single-file web app (`index_language.html`) is a **Cleaning Schedule** UI that you host under Home Assistant’s `/config/www` and open via `/local/...`. It renders your tasks grouped by *Area*, calculates due dates, lets you **add/edit/delete** tasks, and can **persist** the updated table back into Home Assistant using a **webhook**. No external backend is required.
 
+### Newest Version 2.0 is in the remeys_choreboard.zip,  
+further installation steps are put in the README_english.md and README_german.md within the zip.
+
 ### Key features
 - **Task dashboard**
   - Grouped by *Area* with collapsible sections
