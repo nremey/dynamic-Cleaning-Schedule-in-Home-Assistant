@@ -1,3 +1,7 @@
+# Version 3 is out
+check the ReadMe there for more Info about functions, changes, Screenshots.
+
+
 # Choreboard / Cleaning Schedule (Version 2) - Overview
 
 This single-file web app (`index_taskboard.html`) is a task board for cleaning and household chores in Home Assistant.  
