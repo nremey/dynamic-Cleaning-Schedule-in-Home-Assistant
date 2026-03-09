@@ -52,16 +52,9 @@ Use this when:
 
 Read-only rendering works directly from `/local/...`.
 Without this backend, the editing UI still works, but persistent file writes will fail.
-For saving/exporting files from the UI (tasks, catalog, settings, shopping sync config), enable the webhook/file-writer backend:
+For saving/exporting files from the UI (tasks, catalog, settings, shopping sync config), enable the webhook/file-writer backend.
 
-1. Include package from this repo:
-- `packages/taskboard_webhooks_fixed.yaml`
-- and/or service definitions from `packages/services.yaml`
-
-2. Install Python helpers from `scripts/` where your HA setup expects them.
-
-3. Restart HA and verify webhook endpoint used by UI:
-- `POST /api/webhook/taskboard_textcontentfile_export`
+if all files und subfolder are copied to  `/config/www/community/remeys_taskboard` this will be handled.
 
 Shell commands and automations used by the backend package (`packages/taskboard_webhooks_fixed.yaml`):
 - `shell_command.taskboard_textcontentfile_save` (generic file save from base64 payload)
@@ -81,13 +74,13 @@ Shell commands and automations used by the backend package (`packages/taskboard_
   <img width="50%" height="50%" alt="dark theme" src="https://github.com/user-attachments/assets/6cc91265-cbb4-4a98-a3ac-ca3e25847be7" />
 
 - Task board with grouped/list/calendar/family views
-    - calender views are enhanced with calender events, or weather forecast (fitting icon and temperature range)
+    - calendar views are enhanced with calendar events, or weather forecast (fitting icon and temperature range)
 
   <img width="50%" height="50%" alt="View by areas" src="https://github.com/user-attachments/assets/ba7b5441-2b15-4348-9f98-d20d529f110e" />
-  <img width="50%" height="50%" alt="view: calender week" src="https://github.com/user-attachments/assets/a8694660-9fa1-4414-9eda-a94c33b7915b" />
-  <img width="50%" height="50%" alt="view: calender month" src="https://github.com/user-attachments/assets/26715b75-3487-45b3-ad33-91088634840f" />
-  <img width="50%" height="50%" alt="view: calender list" src="https://github.com/user-attachments/assets/8fd7a203-8b33-44b1-92a3-9d5cfd3be70a" />
-  <img width="50%" height="50%" alt="view: family calender " src="https://github.com/user-attachments/assets/92a8f4c7-1003-4cc4-bec5-239fba256c09" />
+  <img width="50%" height="50%" alt="view: calendar week" src="https://github.com/user-attachments/assets/a8694660-9fa1-4414-9eda-a94c33b7915b" />
+  <img width="50%" height="50%" alt="view: calendar month" src="https://github.com/user-attachments/assets/26715b75-3487-45b3-ad33-91088634840f" />
+  <img width="50%" height="50%" alt="view: calendar list" src="https://github.com/user-attachments/assets/8fd7a203-8b33-44b1-92a3-9d5cfd3be70a" />
+  <img width="50%" height="50%" alt="view: family calendar " src="https://github.com/user-attachments/assets/92a8f4c7-1003-4cc4-bec5-239fba256c09" />
 
 - User settings + layout builder + mobile ordering (development focus are larger screens, but small screens can work with adjustments in display optionen and settings)
 - Free Lovelace/custom card embedding via YAML
@@ -96,7 +89,7 @@ Shell commands and automations used by the backend package (`packages/taskboard_
 - Screensaver launcher
 
 - Add/Edit Task Editor:
-  - absolut basic is picking an area and a task name. default recurring pattern is 7 days. Otherwise adapt the template default values.
+  - absolute minimum is picking an area and a task name. default recurring pattern is 7 days. Otherwise adapt the template default values.
   <img width="50%" height="50%" alt="Bildschirmfoto vom 2026-03-08 14-17-29" src="https://github.com/user-attachments/assets/fb23846f-24cf-4369-8ebb-62c1639d63f8" />
   <img width="50%" height="50%" alt="Bildschirmfoto vom 2026-03-08 14-17-46" src="https://github.com/user-attachments/assets/a9320679-a74b-49dd-8490-f2eb96abb875" />
 
@@ -129,9 +122,9 @@ Shell commands and automations used by the backend package (`packages/taskboard_
 
 - Fullscreen clock/background/calendar mode
 - Monthly/weekly background rotation
-- Pictures are chosen from an dedictated folder path and can be replaced
+- Pictures are chosen from an dedicated folder path and can be replaced
 - starts only if the button in the userbar is activated (so no absence detection or automation for this) 
-    My personal usecase, i have guests over and i switch easily to a nice background picture and calender and guest don't see my long list of overdue tasks, of whats on my shoppinglist. Not bulletproof as everyone can close this "screensaver" but deamed good enough for my partner and me for now.
+    My personal usecase, i have guests over and i switch easily to a nice background picture and calendar and guest don't see my long list of overdue tasks, of whats on my shoppinglist. Not bulletproof as everyone can close this "screensaver" but deemed good enough for my partner and me for now.
     Especially if i have it on a public visible shared wall display (with kioskmode of the index_mainview.html which is a long term goal and reason i started this project as alternative existing solutions with supscription fees and so on)
   
 
@@ -259,6 +252,6 @@ However, I cannot guarantee implementation timelines or delivery.
 This is a hobby project and part of an ongoing learning curve.
 
 What is currently on my plate:
-- In Family Calendar view, if many calendar events and task due times overlap in the timetable, sorting/layering and visual display can become messy.
+- In Family Calendar view, if many calendar events and 'tasks due times' overlap in the timetable, sorting/layering and visual display can become messy.
 - This can be a useful indicator that a day needs special focus, but it is not a good design solution yet.
-- I am currently working on better handling for this case.
+- I am researching options on better handling for this case.
