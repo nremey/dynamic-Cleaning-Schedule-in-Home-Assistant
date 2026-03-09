@@ -8,11 +8,12 @@ A Home Assistant web app bundle with:
 
 ## 1) Folder Deployment
 
-Copy this folder content to:
+Unzip the folder ans Copy this folder content to HomeAssistant:
 - `/config/www/community/remeys_taskboard`
 
 Final URL:
 - `https://<HA_HOST>:8123/local/community/remeys_taskboard/index_mainview.html`
+- internal call e.g. within website panel `/local/community/remeys_taskboard/index_mainview.html` is enough
 
 Included structure (ready):
 - `integrations/`
@@ -54,7 +55,7 @@ Read-only rendering works directly from `/local/...`.
 Without this backend, the editing UI still works, but persistent file writes will fail.
 For saving/exporting files from the UI (tasks, catalog, settings, shopping sync config), enable the webhook/file-writer backend.
 
-if all files und subfolder are copied to  `/config/www/community/remeys_taskboard` this will be handled.
+if all files und subfolder are copied to  `/config/www/community/remeys_taskboard` this will be handled and only a restart of HA is necessary.
 
 Shell commands and automations used by the backend package (`packages/taskboard_webhooks_fixed.yaml`):
 - `shell_command.taskboard_textcontentfile_save` (generic file save from base64 payload)
