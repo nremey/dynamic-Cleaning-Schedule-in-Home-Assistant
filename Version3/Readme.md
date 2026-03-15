@@ -23,6 +23,15 @@ Included structure (ready):
 - `packages/`
 - `scripts/`
 
+
+The files of the subfolder `packages/` need to be copied to the HomeAssistant folder `/homeassistant/packages/` and in the `configuration.yaml` include following lines:
+
+```
+homeassistant:
+  packages: !include_dir_named packages
+```
+
+
 ## 2) Home Assistant Auth (URL mode, not iframe)
 
 This project supports multiple auth paths:
