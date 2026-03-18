@@ -5708,7 +5708,7 @@ window.PP_LOAD_THEME_CSS = loadUserThemeCss;
       		if (next === current) continue;
       		r.Assignee = next;
       		const key = makeId(r);
-      		ov[key] = { ...(ov[key] || {}), __uid: r.__uid, Assignee: next };
+      		ov[key] = { ...(ov[key] || {}), uid: r.uid, Assignee: next };
       		changed = true;
       	}
 
@@ -5741,7 +5741,7 @@ window.PP_LOAD_THEME_CSS = loadUserThemeCss;
       		if (next === current) continue;
       		r.Assignee = next;
       		const key = makeId(r);
-      		ov[key] = { ...(ov[key] || {}), __uid: r.__uid, Assignee: next };
+      		ov[key] = { ...(ov[key] || {}), uid: r.uid, Assignee: next };
       		changed = true;
       	}
 
@@ -8001,8 +8001,8 @@ window.PP_LOAD_THEME_CSS = loadUserThemeCss;
       const makeId = (r)=> [r.Area, r.Task].map(v=>String(v||'').toLowerCase().replace(/[^a-z0-9]+/g,'-')).join('__');
 
       // UID + History
-      let __uidSeed = Date.now();
-      const uid = () => (__uidSeed++).toString(36);
+      let taskUidSeed = Date.now();
+      const createTaskUid = () => (taskUidSeed++).toString(36);
       
       function daysInMonth(y, m){
       	return new Date(y, m + 1, 0).getDate();
@@ -8213,7 +8213,9 @@ window.PP_LOAD_THEME_CSS = loadUserThemeCss;
     function ensureUids(){
     	if (!Array.isArray(window.PP_TASKS_DATA)) return;
     	for (const r of window.PP_TASKS_DATA) {
-			if (!r.__uid) r.__uid = uid();
+			if (!r.uid) r.uid = r.__uid || r._uuid || createTaskUid();
+			delete r.__uid;
+			delete r._uuid;
 			if (typeof r.Notes !== 'string') r.Notes = '';
 			if (!r.Assignee) r.Assignee = '';
 			if (!Array.isArray(r.__history)) {
@@ -8676,13 +8678,15 @@ window.PP_LOAD_THEME_CSS = loadUserThemeCss;
     		const added = JSON.parse(localStorage.getItem(ADDED_KEY) || '[]');
     		if (Array.isArray(added) && added.length) {
     			if (!Array.isArray(window.PP_TASKS_DATA)) window.PP_TASKS_DATA = [];
-    			const existing = new Set(window.PP_TASKS_DATA.map(r => r.__uid).filter(Boolean));
+    			const existing = new Set(window.PP_TASKS_DATA.map(r => r.uid || r.__uid || r._uuid).filter(Boolean));
     			for (const r of added){
-    				if (!r.__uid) r.__uid = uid();
+    				if (!r.uid) r.uid = r.__uid || r._uuid || createTaskUid();
+    				delete r.__uid;
+    				delete r._uuid;
     				if(!Array.isArray(r.__history)) r.__history = [];
-    				if(!existing.has(r.__uid)){
+    				if(!existing.has(r.uid)){
     					window.PP_TASKS_DATA.push(r);
-    					existing.add(r.__uid);
+    					existing.add(r.uid);
     				}
     			}
     		}
@@ -9069,8 +9073,8 @@ window.PP_LOAD_THEME_CSS = loadUserThemeCss;
     }
     
     function EntityConnectorKeyForRow(row) {
-    	// Generiere einen eindeutigen Schlüssel basierend auf dem __uid und entity_id der Zeile
-    	return row.__uid + '-' + (row.EntityConnector?.entity_id || 'unknown');
+    	// Generiere einen eindeutigen Schlüssel basierend auf der uid und entity_id der Zeile
+    	return row.uid + '-' + (row.EntityConnector?.entity_id || 'unknown');
     }
     
     function applyEntityConnectorDerivedDue(row) {
@@ -9153,7 +9157,7 @@ function accentClassFromEntityStatus(status){
 }
    function markDoneById(id){
     const rowsAll = Array.isArray(window.PP_TASKS_DATA) ? window.PP_TASKS_DATA : [];
-    const idx = rowsAll.findIndex(r=> r.__uid === id);
+    const idx = rowsAll.findIndex(r=> r.uid === id);
     if(idx < 0) return;
     const r = rowsAll[idx];
     const now = today();
@@ -9189,7 +9193,7 @@ function accentClassFromEntityStatus(status){
     	const key = makeId(r);
     	ov[key] = {
     		...(ov[key]||{}),
-    		__uid: r.__uid,
+    		uid: r.uid,
     		Notes: typeof r.Notes === 'string' ? r.Notes : '',
     		MonthMask: normalizeMonthMask(r.MonthMask),
     		WeekMask: normalizeWeekMask(r.WeekMask),
@@ -9209,7 +9213,7 @@ function accentClassFromEntityStatus(status){
 
    function setDueDateById(id, targetDate){
    const rowsAll = Array.isArray(window.PP_TASKS_DATA) ? window.PP_TASKS_DATA : [];
-   const idx = rowsAll.findIndex(r=> r.__uid === id);
+   const idx = rowsAll.findIndex(r=> r.uid === id);
    if (idx < 0) return;
    const r = rowsAll[idx];
    const base = targetDate instanceof Date ? targetDate : parseDate(targetDate);
@@ -9223,7 +9227,7 @@ function accentClassFromEntityStatus(status){
     	const key = makeId(r);
     	ov[key] = {
     		...(ov[key]||{}),
-    		__uid: r.__uid,
+    		uid: r.uid,
     		Notes: typeof r.Notes === 'string' ? r.Notes : '',
     		Assignee : r.Assignee,
     		MonthMask: normalizeMonthMask(r.MonthMask),
@@ -9240,7 +9244,7 @@ function accentClassFromEntityStatus(status){
 
    function setTaskDateTimeById(id, targetDate, startMinutes){
    const rowsAll = Array.isArray(window.PP_TASKS_DATA) ? window.PP_TASKS_DATA : [];
-   const idx = rowsAll.findIndex(r=> r.__uid === id);
+   const idx = rowsAll.findIndex(r=> r.uid === id);
    if (idx < 0) return;
    const r = rowsAll[idx];
    const base = targetDate instanceof Date ? targetDate : parseDate(targetDate);
@@ -9263,7 +9267,7 @@ function accentClassFromEntityStatus(status){
     	const key = makeId(r);
     	ov[key] = {
     		...(ov[key]||{}),
-    		__uid: r.__uid,
+    		uid: r.uid,
     		Notes: typeof r.Notes === 'string' ? r.Notes : '',
     		Assignee : r.Assignee,
     		MonthMask: normalizeMonthMask(r.MonthMask),
@@ -9332,7 +9336,7 @@ function accentClassFromEntityStatus(status){
     	}
     	const dueCls = dueClass(dueDays);
     	const icon = (item.Icon && String(item.Icon).trim()) ? String(item.Icon).trim() : 'mdi:check';
-    	const id = item.__uid;
+    	const id = item.uid;
     	let dueText = '—';
     	const lastDoneBy = String(item['Last done [By]'] || '').trim() || '—';
     	const activeUser = getActiveUser();
@@ -9572,7 +9576,7 @@ function accentClassFromEntityStatus(status){
 	    			const isOverdueTask = Number.isFinite(dueDays) && dueDays < 0;
 	    			if (!due) continue;
 	    			if (toISO(due) !== dayIso && !isOverdueTask) continue;
-	    			const taskKey = String(item?.__uid || makeId(item) || `${item?.Area || ''}__${item?.Task || ''}` || '').trim();
+	    			const taskKey = String(item?.uid || makeId(item) || `${item?.Area || ''}__${item?.Task || ''}` || '').trim();
 	    			if (taskKey && seenTaskKeys.has(taskKey)) continue;
 	    			if (taskKey) seenTaskKeys.add(taskKey);
 	    			const selectors = String(item?.Assignee || '')
@@ -9589,7 +9593,7 @@ function accentClassFromEntityStatus(status){
 	    			const hasTimedSlot = !isOverdueTask && dueTimeMin !== null;
 	    			const taskEntry = {
 	    				title: String(item.Task || '—'),
-	    				id: String(item.__uid || ''),
+	    				id: String(item.uid || ''),
 	    				area: String(item.Area || '—'),
 	    				kind: 'task',
 	    				color: impColorVar(imp),
@@ -9760,11 +9764,11 @@ function accentClassFromEntityStatus(status){
 	    			top.appendChild(sharedPool);
 	    		}
 	    		users.forEach((u, idx) => {
-	    			const uid = String(u.id);
+	    			const userId = String(u.id);
 	    			const cell = document.createElement('div');
 	    			cell.className = 'family-cal-all-day-cell';
 	    			cell.style.gridColumn = String(idx + 2);
-	    			const items = byUser.get(uid)?.allDay || [];
+	    			const items = byUser.get(userId)?.allDay || [];
 	    			if (!items.length) {
 	    				const empty = document.createElement('div');
 	    				empty.className = 'family-cal-empty';
@@ -9803,12 +9807,12 @@ function accentClassFromEntityStatus(status){
 	    		}
 	    		timeGrid.appendChild(axis);
 	    		for (const u of users) {
-	    			const uid = String(u.id);
+	    			const userId = String(u.id);
 	    			const col = document.createElement('div');
 	    			col.className = 'family-cal-col';
 	    			col.dataset.date = dayIso;
-	    			col.dataset.userId = uid;
-	    			const timed = layoutTimedFamilyEvents(byUser.get(uid)?.timed || []);
+	    			col.dataset.userId = userId;
+	    			const timed = layoutTimedFamilyEvents(byUser.get(userId)?.timed || []);
 	    			for (const ev of timed) {
 	    				const startMin = Math.max(0, Math.min(1439, Number(ev.startMin) || 0));
 	    				const endMin = Math.max(startMin + 15, Math.min(1440, Number(ev.endMin) || (startMin + 60)));
@@ -10143,9 +10147,9 @@ function accentClassFromEntityStatus(status){
     				const el = document.createElement('div');
     				el.className = 'calendar-item' + (imp ? ' ' + imp : '');
     				el.setAttribute('draggable', 'true');
-    				el.dataset.id = item.__uid;
+    				el.dataset.id = item.uid;
     				el.innerHTML = isList ? `
-    					<button class="icn calendar-done" type="button" data-id="${item.__uid}" title="${escapeHtml(t('lastDone'))}">
+    					<button class="icn calendar-done" type="button" data-id="${item.uid}" title="${escapeHtml(t('lastDone'))}">
     						<iconify-icon icon="${escapeHtml(item.Icon || 'mdi:check-circle-outline')}"></iconify-icon>
     					</button>
     					<div class="calendar-item-main">
@@ -10154,7 +10158,7 @@ function accentClassFromEntityStatus(status){
     						<div class="calendar-item-meta due overdue">${escapeHtml(dueText)}</div>
     					</div>
     					<div class="calendar-item-actions">
-    						<button class="mini-btn edit-btn" type="button" data-id="${item.__uid}" title="${escapeHtml(t('editTitle'))}">
+    						<button class="mini-btn edit-btn" type="button" data-id="${item.uid}" title="${escapeHtml(t('editTitle'))}">
     							<iconify-icon icon="mdi:pencil"></iconify-icon>
     						</button>
     					</div>
@@ -10163,10 +10167,10 @@ function accentClassFromEntityStatus(status){
     					<div class="calendar-item-meta">${escapeHtml(item.Area || '—')}</div>
     					<div class="calendar-item-meta due overdue">${escapeHtml(dueText)}</div>
     					<div class="calendar-item-actions">
-    						<button class="mini-btn calendar-done" type="button" data-id="${item.__uid}" title="${escapeHtml(t('lastDone'))}">
+    						<button class="mini-btn calendar-done" type="button" data-id="${item.uid}" title="${escapeHtml(t('lastDone'))}">
     							<iconify-icon icon="mdi:check"></iconify-icon>
     						</button>
-    						<button class="mini-btn edit-btn" type="button" data-id="${item.__uid}" title="${escapeHtml(t('editTitle'))}">
+    						<button class="mini-btn edit-btn" type="button" data-id="${item.uid}" title="${escapeHtml(t('editTitle'))}">
     							<iconify-icon icon="mdi:pencil"></iconify-icon>
     						</button>
     					</div>
@@ -10213,9 +10217,9 @@ function accentClassFromEntityStatus(status){
     					const el = document.createElement('div');
     					el.className = 'calendar-item' + (imp ? ' ' + imp : '');
     					el.setAttribute('draggable', 'true');
-    					el.dataset.id = item.__uid;
+    					el.dataset.id = item.uid;
     					el.innerHTML = `
-    						<button class="icn calendar-done" type="button" data-id="${item.__uid}" title="${escapeHtml(t('lastDone'))}">
+    						<button class="icn calendar-done" type="button" data-id="${item.uid}" title="${escapeHtml(t('lastDone'))}">
     							<iconify-icon icon="${escapeHtml(item.Icon || 'mdi:check-circle-outline')}"></iconify-icon>
     						</button>
     						<div class="calendar-item-main">
@@ -10223,7 +10227,7 @@ function accentClassFromEntityStatus(status){
     							<div class="calendar-item-meta">${escapeHtml(item.Area || '—')}</div>
     						</div>
     						<div class="calendar-item-actions">
-    							<button class="mini-btn edit-btn" type="button" data-id="${item.__uid}" title="${escapeHtml(t('editTitle'))}">
+    							<button class="mini-btn edit-btn" type="button" data-id="${item.uid}" title="${escapeHtml(t('editTitle'))}">
     								<iconify-icon icon="mdi:pencil"></iconify-icon>
     							</button>
     						</div>
@@ -10273,15 +10277,15 @@ function accentClassFromEntityStatus(status){
     					const el = document.createElement('div');
     					el.className = 'calendar-item' + (imp ? ' ' + imp : '');
     					el.setAttribute('draggable', 'true');
-    					el.dataset.id = item.__uid;
+    					el.dataset.id = item.uid;
     					el.innerHTML = `
     						<div class="calendar-item-title">${escapeHtml(item.Task || '—')}${noteClipHtml(item)}</div>
     						<div class="calendar-item-meta">${escapeHtml(item.Area || '—')}</div>
     						<div class="calendar-item-actions">
-    							<button class="mini-btn calendar-done" type="button" data-id="${item.__uid}" title="${escapeHtml(t('lastDone'))}">
+    							<button class="mini-btn calendar-done" type="button" data-id="${item.uid}" title="${escapeHtml(t('lastDone'))}">
     								<iconify-icon icon="mdi:check"></iconify-icon>
     							</button>
-    							<button class="mini-btn edit-btn" type="button" data-id="${item.__uid}" title="${escapeHtml(t('editTitle'))}">
+    							<button class="mini-btn edit-btn" type="button" data-id="${item.uid}" title="${escapeHtml(t('editTitle'))}">
     								<iconify-icon icon="mdi:pencil"></iconify-icon>
     							</button>
     						</div>
@@ -10562,7 +10566,7 @@ function accentClassFromEntityStatus(status){
     		}
     		
     		const row = {
-    			__uid: uid(),
+    			uid: createTaskUid(),
     			Area:      (data.get('Area')||'').trim(),
     			Task:      (data.get('Task')||'').trim(),
     			Assignee:  (data.get('Assignee')||'').trim(),
@@ -10612,7 +10616,7 @@ function accentClassFromEntityStatus(status){
 	function initEditDialog(){
     	const dlg   = document.getElementById('edit-task-dialog');
     	const form  = document.getElementById('edit-task-form');
-    	const uuidHint = document.getElementById('edit-task-uuid');
+    	const uidHint = document.getElementById('edit-task-uid');
     	const cancelBtn = document.getElementById('edit-task-cancel');
     	const delBtn    = document.getElementById('edit-task-delete');
     	const clearHistBtn = document.getElementById('edit-history-clear');
@@ -10625,7 +10629,7 @@ function accentClassFromEntityStatus(status){
     	
     	function getRowById(id){
     		const rowsAll = Array.isArray(window.PP_TASKS_DATA) ? window.PP_TASKS_DATA : [];
-    		const idx = rowsAll.findIndex(r => r.__uid === id);
+    		const idx = rowsAll.findIndex(r => r.uid === id);
     		return { rowsAll, idx, row: idx>=0 ? rowsAll[idx] : null };
     	}
     	
@@ -10646,10 +10650,10 @@ function accentClassFromEntityStatus(status){
     	
     	function fill(row, id){
     		form.elements['__id'].value = id;
-    		if (uuidHint) {
-    			const visibleUuid = String(row?._uuid || row?.__uid || id || '').trim();
-    			uuidHint.textContent = `_uuid: ${visibleUuid || '—'}`;
-    			uuidHint.title = visibleUuid || '';
+    		if (uidHint) {
+    			const visibleUid = String(row?.uid || row?.__uid || row?._uuid || id || '').trim();
+    			uidHint.textContent = `uid: ${visibleUid || '—'}`;
+    			uidHint.title = visibleUid || '';
     		}
     		refreshAreaHints();
     		form.elements['Area'].value = row.Area || '';
@@ -10790,7 +10794,7 @@ function accentClassFromEntityStatus(status){
 			if (oldKey !== newKey && ov[oldKey]) { ov[newKey] = { ...ov[oldKey] }; delete ov[oldKey]; }
 			ov[newKey] = {
 				...(ov[newKey]||{}),
-				__uid: updated.__uid,
+				uid: updated.uid,
 				Area: updated.Area,
 				Task: updated.Task,
 				Assignee: updated.Assignee,
@@ -10840,7 +10844,7 @@ function accentClassFromEntityStatus(status){
 			const key = makeId(row);
 			ov[key] = {
 				...(ov[key]||{}),
-				__uid: row.__uid,
+				uid: row.uid,
 				Notes: typeof row.Notes === 'string' ? row.Notes : '',
 				__history: row.__history
 			};
@@ -10871,7 +10875,7 @@ function accentClassFromEntityStatus(status){
 			row.__history_doneby = [];
 			const ov = getOverrides();
 			const key = makeId(row);
-			ov[key] = { ...(ov[key]||{}), __uid: row.__uid, __history: row.__history, __history_doneby: row.__history_doneby };
+			ov[key] = { ...(ov[key]||{}), uid: row.uid, __history: row.__history, __history_doneby: row.__history_doneby };
 			
 			setOverrides(ov);
 			
@@ -10889,18 +10893,18 @@ function accentClassFromEntityStatus(status){
 			}
 		});
 		
-		// Delete (stabil über __uid)
+		// Delete (stabil über uid)
 		delBtn?.addEventListener('click', async ()=>{
 			const id = form.elements['__id'].value;
 			if (!confirm(t('confirmDelete'))) return;
 			const {rowsAll, idx, row} = getRowById(id);
 			if (!row || idx < 0) return;
-			const uidToDelete = row.__uid;
+			const uidToDelete = row.uid;
 			const keyNow = makeId(row);
 			const ov = getOverrides();
 			if (ov[keyNow]) delete ov[keyNow];
 			for (const k of Object.keys(ov)) {
-				if (ov[k] && ov[k].__uid === uidToDelete) delete ov[k];
+				if (ov[k] && (ov[k].uid === uidToDelete || ov[k].__uid === uidToDelete)) delete ov[k];
 			}
 			setOverrides(ov);
 			rowsAll.splice(idx, 1);
@@ -10908,7 +10912,7 @@ function accentClassFromEntityStatus(status){
 			try{
 				const ADDED_KEY = 'pp-added';
 				const added = JSON.parse(localStorage.getItem(ADDED_KEY) || '[]');
-				const cleaned = Array.isArray(added) ? added.filter(r => r.__uid !== uidToDelete) : [];
+				const cleaned = Array.isArray(added) ? added.filter(r => (r.uid || r.__uid) !== uidToDelete) : [];
 				localStorage.setItem(ADDED_KEY, JSON.stringify(cleaned));
 			} catch{}
 			
@@ -11170,7 +11174,7 @@ function accentClassFromEntityStatus(status){
 <dialog id="edit-task-dialog">
 	<form id="edit-task-form" method="dialog">
 		<h3 class="dlg-title" id="edit-dlg-title">Aufgabe bearbeiten</h3>
-		<div id="edit-task-uuid" class="muted" style="font-size:.72rem; line-height:1.1; letter-spacing:.01em; font-family:ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; margin:-4px 0 8px;">_uuid: -</div>
+		<div id="edit-task-uid" class="muted" style="font-size:.72rem; line-height:1.1; letter-spacing:.01em; font-family:ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; margin:-4px 0 8px;">uid: -</div>
 		<input type="hidden" name="__id" />
 		
 		<div class="dlg-grid">
