@@ -31,6 +31,22 @@ homeassistant:
   packages: !include_dir_named packages
 ```
 
+Without this backend, the editing UI still works, but persistent file writes will fail.
+For saving/exporting files from the UI (tasks, catalog, settings, shopping sync config), enable this webhook/file-writer backend.
+
+Shell commands and automations used by the backend package (`packages/taskboard_webhooks_fixed.yaml`):
+- `shell_command.taskboard_textcontentfile_save` (generic file save from base64 payload)
+- `shell_command.taskboard_task_operation` (tasklist operations via `scripts/task_ops.py`)
+- `shell_command.taskboard_product_catalog_operation` (catalog operations via `scripts/product_catalog_ops.py`)
+- `shell_command.taskboard_mark_done_task` (mark one task done via UUID/assignee)
+- `shell_command.taskboard_due_digest` (runs `scripts/taskboard_due_digest_script.py`)
+- Automation `taskboard_textcontentfile_export` (`Webhook: remey_taskboard_file_export`)
+- Automation `taskboard_due_digest_webhook_notify` (`Taskboard: Due Digest Webhook -> Device`)
+- Automation `taskboard_daily_digest_trigger` (`Taskboard: Daily Digest Trigger`)
+
+
+If all files und subfolder are copied to  their respected path a restart of HA is necessary.
+
 
 ## 2) Home Assistant Auth (URL mode, not iframe)
 
@@ -58,25 +74,7 @@ Use this when:
 - cross-context usage where HA session access fails.
 
 
-## 3) Required HA Setup for Write/Save Features
-
-Read-only rendering works directly from `/local/...`.
-Without this backend, the editing UI still works, but persistent file writes will fail.
-For saving/exporting files from the UI (tasks, catalog, settings, shopping sync config), enable the webhook/file-writer backend.
-
-if all files und subfolder are copied to  `/config/www/community/remeys_taskboard` this will be handled and only a restart of HA is necessary.
-
-Shell commands and automations used by the backend package (`packages/taskboard_webhooks_fixed.yaml`):
-- `shell_command.taskboard_textcontentfile_save` (generic file save from base64 payload)
-- `shell_command.taskboard_task_operation` (tasklist operations via `scripts/task_ops.py`)
-- `shell_command.taskboard_product_catalog_operation` (catalog operations via `scripts/product_catalog_ops.py`)
-- `shell_command.taskboard_mark_done_task` (mark one task done via UUID/assignee)
-- `shell_command.taskboard_due_digest` (runs `scripts/taskboard_due_digest_script.py`)
-- Automation `taskboard_textcontentfile_export` (`Webhook: remey_taskboard_file_export`)
-- Automation `taskboard_due_digest_webhook_notify` (`Taskboard: Due Digest Webhook -> Device`)
-- Automation `taskboard_daily_digest_trigger` (`Taskboard: Daily Digest Trigger`)
-
-## 4) What You Can Do (some Screenshots added for context)
+## 3) What You Can Do (some Screenshots added for context)
 
 ## Main Board (`index_mainview.html`)
   <img width="50%" height="50%" alt="light theme" src="https://github.com/user-attachments/assets/9a7a12ec-fa55-4312-a130-6b473d1907a8" />
@@ -208,7 +206,7 @@ Status note (experimental):
 If resource is missing, UI shows:
 - `Could not render card (custom element not registered: <tag>)`
 
-## 5) First-Run Checklist
+## 4) First-Run Checklist
 
 1. Open `/local/community/remeys_taskboard/index_mainview.html` (recommended with Website card)
 2. Go to Settings:
@@ -224,7 +222,7 @@ If resource is missing, UI shows:
 5. Start adding tasks.
 
 
-## 6) Update Notes
+## 5) Update Notes
 
 - `usersettings/users.json` is seeded as an empty array for the first run.
 - `usersettings/global.settings.json` is included as starter config.
