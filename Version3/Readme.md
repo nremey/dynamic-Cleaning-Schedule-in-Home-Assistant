@@ -8,7 +8,7 @@ A Home Assistant web app bundle with:
 
 ## 1) Folder Deployment
 
-Unzip the folder ans Copy this folder content to HomeAssistant:
+Copy this folder remeys_taskboard with its content to HomeAssistant:
 - `/config/www/community/remeys_taskboard`
 
 Final URL:
