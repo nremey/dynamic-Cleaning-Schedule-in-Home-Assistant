@@ -1,0 +1,1020 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Screensaver</title>
+  <script src="https://code.iconify.design/iconify-icon/2.1.0/iconify-icon.min.js" defer></script>
+  <script src="ha_auth.js"></script>
+  <script src="integrations/rain-gauge.integration.js"></script>
+  <style>
+    :root {
+      color-scheme: light;
+      font-family: "Segoe UI", Tahoma, sans-serif;
+    }
+
+    * { box-sizing: border-box; }
+
+    body {
+      margin: 0;
+      min-height: 100vh;
+      position: relative;
+      color: #f4f7fb;
+      background-color: #111;
+      background-repeat: no-repeat;
+      background-position: center center;
+      background-size: cover;
+      overflow: hidden;
+    }
+
+    .top-bar {
+      position: absolute;
+      top: clamp(14px, 3.2vh, 42px);
+      left: clamp(14px, 3vw, 50px);
+      right: clamp(14px, 3vw, 50px);
+      z-index: 3;
+      display: flex;
+      align-items: flex-start;
+      justify-content: space-between;
+      gap: 1rem;
+      pointer-events: none;
+      user-select: none;
+    }
+    .top-right-stack {
+      display: flex;
+      flex-direction: column;
+      align-items: flex-end;
+      gap: 0.65rem;
+    }
+
+    .top-left-clock {
+      font-size: clamp(2.8rem, 11vw, 10.5rem);
+      font-weight: 900;
+      line-height: 0.95;
+      color: rgba(255, 255, 255, 0.96);
+      letter-spacing: 0.02em;
+      text-shadow: 0 6px 22px rgba(0, 0, 0, 0.42);
+      margin: 0;
+    }
+
+    .weather-hero {
+      min-width: min(44vw, 560px);
+      max-width: min(52vw, 720px);
+      padding: clamp(10px, 1.2vw, 18px) clamp(14px, 1.7vw, 22px);
+      border-radius: 18px;
+      border: 1px solid rgba(255, 255, 255, 0.34);
+      background: linear-gradient(120deg, rgba(8, 23, 38, 0.55), rgba(8, 23, 38, 0.3));
+      backdrop-filter: blur(5px);
+      -webkit-backdrop-filter: blur(5px);
+      box-shadow: 0 10px 30px rgba(0, 0, 0, 0.26);
+      text-align: right;
+      color: rgba(249, 252, 255, 0.97);
+    }
+
+    .weather-hero-main {
+      font-size: clamp(1.25rem, 2.2vw, 2.2rem);
+      line-height: 1.15;
+      font-weight: 800;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .weather-hero-rain {
+      margin-top: 0.45rem;
+      font-size: clamp(0.88rem, 1.05vw, 1.08rem);
+      opacity: 0.95;
+    }
+
+    .calendar-overlay {
+      position: absolute;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      width: 100%;
+      padding: 1rem 1.2rem 1.4rem;
+      border-radius: 0;
+      background: linear-gradient(to top, rgba(2, 8, 14, 0.62), rgba(2, 8, 14, 0.22));
+      backdrop-filter: blur(4px);
+      -webkit-backdrop-filter: blur(4px);
+      box-shadow: 0 -8px 26px rgba(0, 0, 0, 0.35);
+      z-index: 2;
+    }
+    .screensaver-rain-gauge{
+      width:min(38vw, 440px);
+      z-index:4;
+    }
+    .screensaver-rain-gauge .pp-rain-gauge-card{
+      margin:0;
+      padding:8px 10px 8px;
+      background:linear-gradient(135deg, rgba(12,22,38,.82), rgba(24,34,50,.72));
+      border-color:rgba(255,255,255,.24);
+    }
+    .screensaver-rain-gauge .pp-rain-gauge-head{
+      margin-bottom:2px;
+    }
+    .screensaver-rain-gauge .pp-rain-gauge-title{
+      font-size:.9rem;
+    }
+    .screensaver-rain-gauge .pp-rain-gauge-wrap{
+      width:min(100%, 280px);
+    }
+    .screensaver-rain-gauge .pp-rain-gauge-value{
+      font-size:1.4rem;
+    }
+
+    .meta {
+      margin-bottom: 0.8rem;
+      font-size: clamp(0.9rem, 1.6vw, 1.1rem);
+      font-weight: 700;
+      color: rgba(249, 251, 255, 0.95);
+      display: grid;
+      grid-template-columns: 1fr auto auto;
+      align-items: center;
+      gap: 0.7rem;
+    }
+
+    .meta-left { text-align: left; text-transform: capitalize; }
+    .meta-center { text-align: center; }
+    .meta-right { text-align: right; }
+
+    table {
+      width: 100%;
+      border-collapse: separate;
+      border-spacing: 0.34rem;
+      table-layout: fixed;
+    }
+
+    th, td {
+      text-align: left;
+      vertical-align: top;
+      padding: 0.45rem 0.45rem;
+      color: #f4f8ff;
+      font-weight: 600;
+      border: 1px solid rgba(255, 255, 255, 0.25);
+      border-radius: 11px;
+      background: rgba(255, 255, 255, 0.12);
+      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.12);
+      min-height: 56px;
+    }
+
+    th {
+      text-align: center;
+      background: rgba(255, 255, 255, 0.2);
+      font-size: 0.92rem;
+      padding: 0.38rem 0.2rem;
+      height: auto;
+      min-height: 0;
+    }
+
+    td.today {
+      background: rgba(56, 92, 132, 0.44);
+      border-color: rgba(159, 213, 255, 0.62);
+      box-shadow: 0 4px 14px rgba(0, 0, 0, 0.22);
+    }
+
+    td.empty {
+      background: rgba(255, 255, 255, 0.08);
+      border-color: rgba(255, 255, 255, 0.12);
+      box-shadow: none;
+    }
+
+    .day-label {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 0.35rem;
+      font-size: 0.86rem;
+      margin-bottom: 0.24rem;
+      color: rgba(245, 250, 255, 0.95);
+    }
+
+    .events {
+      display: grid;
+      gap: 0.18rem;
+    }
+
+    .event {
+      font-size: 0.75rem;
+      line-height: 1.28;
+      border-radius: 6px;
+      padding: 0.16rem 0.28rem;
+      background: rgba(0, 0, 0, 0.24);
+      border-left: 3px solid rgba(255, 255, 255, 0.7);
+      overflow: hidden;
+      display: flex;
+      align-items: center;
+      gap: 0.28rem;
+    }
+
+    .event-icon {
+      flex: 0 0 auto;
+      font-size: 0.92rem;
+      opacity: 0.94;
+    }
+
+    .event-main {
+      min-width: 0;
+      overflow: hidden;
+      white-space: nowrap;
+      text-overflow: ellipsis;
+    }
+
+    .event-time {
+      opacity: 0.9;
+      margin-right: 0.2rem;
+    }
+
+    .hidden {
+      display: none !important;
+    }
+
+    @media (max-width: 980px) {
+      .calendar-overlay { padding: 0.78rem; }
+      .meta { font-size: 0.92rem; grid-template-columns: 1fr auto; }
+      .top-bar {
+        top: 10px;
+        left: 10px;
+        right: 10px;
+      }
+      .weather-hero {
+        min-width: min(56vw, 360px);
+        max-width: min(62vw, 430px);
+        border-radius: 14px;
+        padding: 10px 12px;
+      }
+      .screensaver-rain-gauge{
+        width:min(64vw, 300px);
+      }
+      th { font-size: 0.78rem; }
+      .event { font-size: 0.68rem; }
+    }
+  </style>
+</head>
+<body>
+  <div class="top-bar">
+    <div id="top-clock" class="top-left-clock">--:--</div>
+    <div class="top-right-stack">
+      <div id="weather-hero" class="weather-hero">
+        <div id="weather-hero-main" class="weather-hero-main">--</div>
+        <div id="weather-hero-rain" class="weather-hero-rain hidden"></div>
+      </div>
+      <div id="screensaver-rain-gauge" class="screensaver-rain-gauge hidden"></div>
+    </div>
+  </div>
+
+  <section id="calendar-overlay" class="calendar-overlay">
+    <div class="meta">
+      <span class="meta-left" id="meta-month"></span>
+      <span class="meta-center" id="meta-week"></span>
+      <span class="meta-right"></span>
+    </div>
+    <table aria-label="Calendar">
+      <thead id="calendar-head"></thead>
+      <tbody id="calendar-body"></tbody>
+    </table>
+  </section>
+
+  <script>
+    (function(){
+      const DEFAULT_SETTINGS = {
+        weekStart: 'mon',
+        calendarSources: [],
+        weather: { enabled: false, entityId: '' },
+        screensaver: {
+          imageMode: 'month',
+          weekStart: 'mon',
+          language: 'auto',
+          showTime: true,
+          gridMode: 'week',
+          showWeather: true,
+          showRainForecast: false,
+          showRainGauge: false
+        }
+      };
+
+      let runtime = {
+        settings: (typeof structuredClone === 'function')
+          ? structuredClone(DEFAULT_SETTINGS)
+          : JSON.parse(JSON.stringify(DEFAULT_SETTINGS)),
+        locale: 'de-DE',
+        hass: null,
+        eventsByDay: new Map(),
+        weather: { icon: '⛅', temp: '--', state: '--', rainText: '' },
+        rainGaugeRows: [],
+        fullRenderTimer: null
+      };
+      const FULL_REFRESH_MS = 5 * 60 * 1000;
+
+      function normalizeBasePath(p){
+        let s = String(p || '').trim();
+        if (!s) return '/local/';
+        if (!s.startsWith('/')) s = '/' + s;
+        s = s.replace(/\/{2,}/g, '/');
+        if (!s.endsWith('/')) s += '/';
+        return s;
+      }
+
+      function detectBasePath(){
+        const path = String(window.location.pathname || '');
+        const idx = path.lastIndexOf('/');
+        if (idx < 0) return '/local/';
+        return normalizeBasePath(path.slice(0, idx + 1));
+      }
+
+      function getHaOrigin(){
+        try {
+          if (window.top?.location && /^https?:/.test(window.top.location.origin)) return window.top.location.origin;
+        } catch (_) {}
+        if (typeof window.location?.origin === 'string' && /^https?:/.test(window.location.origin)) return window.location.origin;
+        return '';
+      }
+
+      function getHaTokenFromConfig() {
+        const cfg = (window.PP_HA_AUTH && typeof window.PP_HA_AUTH === 'object') ? window.PP_HA_AUTH : {};
+        const candidates = [cfg.longLivedBearerToken, cfg.longLivedToken, cfg.bearerToken, cfg.token];
+        for (const token of candidates) {
+          const out = String(token || '').trim();
+          if (out) return out;
+        }
+        return '';
+      }
+
+      function getHaTokenFromStorage() {
+        try {
+          const raw = localStorage.getItem('hassTokens');
+          if (!raw) return '';
+          const parsed = JSON.parse(raw);
+          return String(parsed?.access_token || parsed?.accessToken || parsed?.token || '').trim();
+        } catch (_) {
+          return '';
+        }
+      }
+
+      function getHaAccessToken() {
+        const candidates = [
+          window?.hass?.auth?.data?.access_token,
+          window?.hass?.auth?.accessToken,
+          window?.hassConnection?.options?.auth?.accessToken,
+          getHaTokenFromConfig(),
+          getHaTokenFromStorage()
+        ];
+        for (const token of candidates) {
+          const out = String(token || '').trim();
+          if (out) return out;
+        }
+        return '';
+      }
+
+      function getNativeHass(){
+        try {
+          return window.getTaskboardHass?.() || window.hass || window.parent?.getTaskboardHass?.() || window.parent?.hass || null;
+        } catch (_) {
+          return null;
+        }
+      }
+
+      function createApiFallbackHass(){
+        return {
+          states: Object.create(null),
+          callApi: async (method, path, body) => {
+            const token = getHaAccessToken();
+            const origin = getHaOrigin();
+            if (!token || !origin) throw new Error('Missing HA token/origin for API fallback');
+            const normalized = String(path || '').replace(/^\/+/, '');
+            const apiPath = normalized.startsWith('api/') ? '/' + normalized : '/api/' + normalized;
+            const url = new URL(apiPath, origin).toString();
+            const headers = { Authorization: 'Bearer ' + token };
+            const payload = body !== undefined ? body : null;
+            if (payload !== null) headers['Content-Type'] = 'application/json';
+            const res = await fetch(url, {
+              method: String(method || 'GET').toUpperCase(),
+              headers,
+              body: payload === null ? undefined : JSON.stringify(payload)
+            });
+            const text = await res.text();
+            if (!res.ok) throw new Error(`HA API ${res.status}: ${text}`);
+            if (!text) return null;
+            try { return JSON.parse(text); } catch (_) { return text; }
+          }
+        };
+      }
+
+      function getHass(){
+        const native = getNativeHass();
+        if (native?.callApi) return native;
+        const token = getHaAccessToken();
+        return token ? createApiFallbackHass() : null;
+      }
+
+      function normalizeWeekStart(v){
+        return String(v || '').toLowerCase() === 'sun' ? 'sun' : 'mon';
+      }
+
+      function normalizeScreensaverSettings(raw){
+        const cfg = (raw && typeof raw === 'object') ? raw : {};
+        const imageMode = String(cfg.imageMode || '').toLowerCase() === 'week' ? 'week' : 'month';
+        const languageRaw = String(cfg.language || 'auto').trim().toLowerCase();
+        const gridModeRaw = String(cfg.gridMode || '').trim().toLowerCase();
+        return {
+          imageMode,
+          weekStart: normalizeWeekStart(cfg.weekStart || 'mon'),
+          language: languageRaw || 'auto',
+          showTime: cfg.showTime !== false,
+          gridMode: ['off', 'week', 'month'].includes(gridModeRaw) ? gridModeRaw : 'week',
+          showWeather: cfg.showWeather !== false,
+          showRainForecast: cfg.showRainForecast === true,
+          showRainGauge: cfg.showRainGauge === true
+        };
+      }
+
+      async function fetchFirstJson(urls){
+        for (const url of urls) {
+          try {
+            const res = await fetch(url, { cache: 'no-store' });
+            if (!res.ok) continue;
+            return await res.json();
+          } catch (_) {}
+        }
+        return null;
+      }
+
+      async function loadGlobalSettings(basePath){
+        const abs1 = new URL(basePath + 'usersettings/global.settings.json', getHaOrigin()).toString();
+        const abs2 = new URL(basePath + 'global.settings.json', getHaOrigin()).toString();
+        const data = await fetchFirstJson([abs1, abs2]);
+        const merged = Object.assign({}, DEFAULT_SETTINGS, data || {});
+        merged.weather = Object.assign({}, DEFAULT_SETTINGS.weather, data?.weather || {});
+        merged.screensaver = normalizeScreensaverSettings(data?.screensaver || DEFAULT_SETTINGS.screensaver);
+        merged.calendarSources = Array.isArray(data?.calendarSources) ? data.calendarSources : [];
+        merged.weekStart = normalizeWeekStart(data?.weekStart || 'mon');
+        return merged;
+      }
+
+      function getLocaleFromSetting(language){
+        if (language && language !== 'auto') {
+          const map = {
+            de: 'de-DE', en: 'en-US', fr: 'fr-FR', es: 'es-ES', it: 'it-IT'
+          };
+          return map[language] || language;
+        }
+        const fromNavigator = Array.isArray(navigator.languages) && navigator.languages.length
+          ? String(navigator.languages[0] || '').trim()
+          : String(navigator.language || '').trim();
+        const fromDoc = String(document.documentElement.lang || '').trim();
+        return fromNavigator || fromDoc || 'de-DE';
+      }
+
+      function pad2(v){ return String(v).padStart(2, '0'); }
+
+      function isoWeekNumber(date) {
+        const d = new Date(Date.UTC(date.getFullYear(), date.getMonth(), date.getDate()));
+        const day = d.getUTCDay() || 7;
+        d.setUTCDate(d.getUTCDate() + 4 - day);
+        const yearStart = new Date(Date.UTC(d.getUTCFullYear(), 0, 1));
+        return Math.ceil((((d - yearStart) / 86400000) + 1) / 7);
+      }
+
+      function weekLabelPrefix(locale) {
+        const l = String(locale || '').toLowerCase();
+        return l.startsWith('de') ? 'KW' : 'CW';
+      }
+
+      async function imageExists(url){
+        try {
+          const img = new Image();
+          return await new Promise((resolve)=>{
+            let done = false;
+            const finish = (ok)=>{ if (!done) { done = true; resolve(ok); } };
+            img.onload = ()=> finish(true);
+            img.onerror = ()=> finish(false);
+            img.src = url;
+            setTimeout(()=> finish(false), 1800);
+          });
+        } catch (_) {
+          return false;
+        }
+      }
+
+      async function pickBackgroundUrl(basePath, settings, date){
+        const mode = settings.screensaver.imageMode;
+        const month2 = pad2(date.getMonth() + 1);
+        const month3 = String(date.getMonth() + 1).padStart(3, '0');
+        const week2 = pad2(isoWeekNumber(date));
+        const hour = date.getHours();
+        const weekSuffix = hour < 12 ? 'a' : 'p';
+
+        const candidates = [];
+        if (mode === 'week') {
+          candidates.push(
+            `${basePath}screensaver/pictures_week/${week2}_${weekSuffix}.jpg`,
+            `${basePath}screensaver/pictures_week/${week2}_${weekSuffix}.png`,
+            `${basePath}screensaver/pictures_week/${week2}_${weekSuffix}.jpeg`,
+            `${basePath}screensaver/pictures_week/${week2}_${weekSuffix}.JPG`,
+            `${basePath}screensaver/pictures_week/${week2}_${weekSuffix}.JPEG`,
+            `${basePath}screensaver/pictures_week/${week2}.jpg`,
+            `${basePath}screensaver/pictures_week/${week2}.png`,
+            `${basePath}screensaver/pictures_week/${week2}.jpeg`
+          );
+        }
+        candidates.push(
+          `${basePath}screensaver/pictures_month/${month2}.jpg`,
+          `${basePath}screensaver/pictures_month/${month2}.png`,
+          `${basePath}screensaver/pictures_month/${month2}.jpeg`,
+          `${basePath}screensaver/pictures_month/${month2}.JPG`,
+          `${basePath}screensaver/pictures_month/${month2}.JPEG`
+        );
+
+        for (const rel of candidates) {
+          const abs = new URL(rel, getHaOrigin()).toString();
+          if (await imageExists(abs)) return abs;
+        }
+
+        try {
+          const manifestUrl = new URL(basePath + 'screensaver/backgrounds.json', getHaOrigin()).toString();
+          const res = await fetch(manifestUrl, { cache: 'no-store' });
+          if (res.ok) {
+            const data = await res.json();
+            const list = Array.isArray(data) ? data : Array.isArray(data?.images) ? data.images : [];
+            for (const item of list) {
+              const abs = new URL(basePath + 'screensaver/' + String(item || '').replace(/^\/+/, ''), getHaOrigin()).toString();
+              if (await imageExists(abs)) return abs;
+            }
+          }
+        } catch (_) {}
+
+        return '';
+      }
+
+      function toIsoDay(date){
+        return `${date.getFullYear()}-${pad2(date.getMonth() + 1)}-${pad2(date.getDate())}`;
+      }
+
+      function diffInDays(a, b){
+        const ms = 24 * 60 * 60 * 1000;
+        return Math.round((a.getTime() - b.getTime()) / ms);
+      }
+
+      async function fetchCalendarEvents(hass, sources, startDate, endDate){
+        if (!hass?.callApi) return [];
+        const out = [];
+        const startIso = `${toIsoDay(startDate)}T00:00:00`;
+        const endIso = `${toIsoDay(endDate)}T23:59:59`;
+
+        for (const src of (Array.isArray(sources) ? sources : [])) {
+          const entityId = String(src?.entityId || '').trim();
+          if (!entityId) continue;
+          try {
+            const path = `calendars/${encodeURIComponent(entityId)}?start=${encodeURIComponent(startIso)}&end=${encodeURIComponent(endIso)}`;
+            const rows = await hass.callApi('GET', path);
+            if (!Array.isArray(rows)) continue;
+            for (const ev of rows) {
+              const title = String(ev?.summary || ev?.message || src?.name || entityId || '').trim();
+              if (!title) continue;
+              const startRaw = String(ev?.start?.dateTime || ev?.start?.date || '').trim();
+              const endRaw = String(ev?.end?.dateTime || ev?.end?.date || '').trim();
+              const color = String(src?.color || '').trim() || 'rgba(255,255,255,0.72)';
+              const icon = String(src?.icon || '').trim();
+              out.push({ title, startRaw, endRaw, color, icon });
+            }
+          } catch (_) {}
+        }
+        return out;
+      }
+
+      function parseEventDate(raw){
+        const s = String(raw || '').trim();
+        if (!s) return null;
+        if (/^\d{4}-\d{2}-\d{2}$/.test(s)) {
+          const [y, m, d] = s.split('-').map(Number);
+          return new Date(y, m - 1, d, 12, 0, 0, 0);
+        }
+        const dt = new Date(s);
+        return Number.isNaN(dt.getTime()) ? null : dt;
+      }
+
+      function formatEventTime(raw, locale){
+        const s = String(raw || '').trim();
+        if (!s) return '';
+        if (/^\d{4}-\d{2}-\d{2}$/.test(s)) return '';
+        const dt = new Date(s);
+        if (Number.isNaN(dt.getTime())) return '';
+        return new Intl.DateTimeFormat(locale, { hour: '2-digit', minute: '2-digit' }).format(dt);
+      }
+
+      function getEventSpan(startRaw, endRaw){
+        const start = parseEventDate(startRaw);
+        if (!start) return null;
+        let end = parseEventDate(endRaw) || new Date(start);
+        const endRawText = String(endRaw || '').trim();
+        const endIsDateOnly = /^\d{4}-\d{2}-\d{2}$/.test(endRawText);
+        if (endIsDateOnly) {
+          end = new Date(end);
+          end.setDate(end.getDate() - 1);
+          end.setHours(12, 0, 0, 0);
+        }
+        if (Number.isNaN(end.getTime()) || end < start) end = new Date(start);
+        start.setHours(12, 0, 0, 0);
+        if (!endIsDateOnly) end.setHours(12, 0, 0, 0);
+        return { start, end };
+      }
+
+      function groupEventsByDay(events){
+        const map = new Map();
+        for (const ev of (events || [])) {
+          const span = getEventSpan(ev.startRaw, ev.endRaw);
+          if (!span) continue;
+          for (let day = new Date(span.start); day <= span.end; day.setDate(day.getDate() + 1)) {
+            const key = toIsoDay(day);
+            if (!map.has(key)) map.set(key, []);
+            map.get(key).push({
+              ...ev,
+              __isStartDay: key === toIsoDay(span.start),
+              __isEndDay: key === toIsoDay(span.end)
+            });
+          }
+        }
+        for (const [, list] of map) {
+          list.sort((a, b) => String(a.startRaw || '').localeCompare(String(b.startRaw || '')));
+        }
+        return map;
+      }
+
+      function buildScreensaverEventDisplay(ev, locale){
+        const startTime = formatEventTime(ev.startRaw, locale);
+        const endTime = formatEventTime(ev.endRaw, locale);
+        const span = getEventSpan(ev.startRaw, ev.endRaw);
+        const daySpan = span ? Math.max(1, diffInDays(span.end, span.start) + 1) : 1;
+        if (daySpan > 1 || (!ev.__isStartDay && !ev.__isEndDay)) {
+          if (ev.__isStartDay) {
+            return { time: startTime ? `${startTime} →` : '→', titlePrefix: '', titleSuffix: '' };
+          }
+          if (ev.__isEndDay) {
+            return { time: endTime ? `→ ${endTime}` : '→', titlePrefix: '', titleSuffix: '' };
+          }
+          return { time: '↔', titlePrefix: '', titleSuffix: '' };
+        }
+        if (startTime && endTime) return { time: `${startTime} - ${endTime}`, titlePrefix: '', titleSuffix: '' };
+        if (startTime) return { time: startTime, titlePrefix: '', titleSuffix: '' };
+        return { time: '', titlePrefix: '', titleSuffix: '' };
+      }
+
+      function weatherIconForState(state){
+        const s = String(state || '').toLowerCase();
+        if (s.includes('rain') || s.includes('regen')) return '🌧️';
+        if (s.includes('snow') || s.includes('schnee')) return '❄️';
+        if (s.includes('clear') || s.includes('sun') || s.includes('klar') || s.includes('sonn')) return '☀️';
+        if (s.includes('cloud') || s.includes('bew')) return '☁️';
+        if (s.includes('storm') || s.includes('thunder') || s.includes('gewitter')) return '⛈️';
+        if (s.includes('fog') || s.includes('nebel')) return '🌫️';
+        return '⛅';
+      }
+
+      async function fetchRainForecastText(hass, entityId, locale){
+        const fallback = locale.startsWith('de') ? 'keine Regenvorhersage' : 'no rain forecast';
+        if (!hass?.callApi || !entityId) return fallback;
+
+        const fromForecastArray = (arr)=>{
+          if (!Array.isArray(arr) || !arr.length) return '';
+          const row = arr[0] || {};
+          const prob = Number(row.precipitation_probability);
+          const amount = Number(row.precipitation);
+          const probText = Number.isFinite(prob)
+            ? (locale.startsWith('de') ? `Regen ${Math.round(prob)}%` : `Rain ${Math.round(prob)}%`)
+            : '';
+          const amountText = Number.isFinite(amount)
+            ? (locale.startsWith('de') ? `${amount} mm` : `${amount} mm`)
+            : '';
+          return [probText, amountText].filter(Boolean).join(' · ');
+        };
+
+        try {
+          const serviceRes = await hass.callApi('POST', 'services/weather/get_forecasts', {
+            type: 'daily',
+            entity_id: [entityId]
+          });
+          const rows = serviceRes && typeof serviceRes === 'object' ? serviceRes[entityId] || serviceRes[String(entityId).toLowerCase()] : null;
+          const txt = fromForecastArray(rows?.forecast || rows);
+          if (txt) return txt;
+        } catch (_) {}
+
+        try {
+          const stateObj = hass.states?.[String(entityId).toLowerCase()] || hass.states?.[entityId];
+          const txt = fromForecastArray(stateObj?.attributes?.forecast);
+          if (txt) return txt;
+        } catch (_) {}
+
+        return fallback;
+      }
+
+      async function readWeather(hass, settings, locale){
+        const cfg = settings.weather || {};
+        const entityId = String(cfg.entityId || '').trim();
+        if (!entityId || !cfg.enabled) {
+          return { icon: '⛅', temp: '--', state: '--', rainText: '' };
+        }
+
+        let st = null;
+        try {
+          st = hass?.states?.[entityId.toLowerCase()] || hass?.states?.[entityId] || null;
+          if (!st && hass?.callApi) {
+            st = await hass.callApi('GET', `states/${encodeURIComponent(entityId)}`);
+          }
+        } catch (_) {}
+
+        const attrs = st?.attributes || {};
+        const temp = Number(attrs.temperature);
+        const tempUnit = String(attrs.temperature_unit || 'C').toUpperCase();
+        const tempText = Number.isFinite(temp) ? `${Math.round(temp)}${tempUnit}` : '--';
+        const stateText = String(st?.state || '--');
+        const icon = weatherIconForState(stateText);
+        return {
+          icon,
+          temp: tempText,
+          state: stateText,
+          rainText: settings.screensaver.showRainForecast ? await fetchRainForecastText(hass, entityId, locale) : ''
+        };
+      }
+      async function fetchHourlyRainRows(hass, entityId){
+        if (!hass?.callApi || !entityId) return [];
+        const normalize = (arr)=> (Array.isArray(arr) ? arr : []).map((row)=>({
+          datetime: row?.datetime || row?.time || row?.date,
+          precipitation: Number(row?.precipitation),
+          precipitation_probability: Number(row?.precipitation_probability)
+        })).filter((row)=> row.datetime);
+        try {
+          const serviceRes = await hass.callApi('POST', 'services/weather/get_forecasts', {
+            type: 'hourly',
+            entity_id: [entityId]
+          });
+          const rows = serviceRes && typeof serviceRes === 'object'
+            ? serviceRes[entityId] || serviceRes[String(entityId).toLowerCase()]
+            : null;
+          const list = normalize(rows?.forecast || rows);
+          if (list.length) return list;
+        } catch (_) {}
+        try {
+          const stateObj = hass.states?.[String(entityId).toLowerCase()] || hass.states?.[entityId];
+          const list = normalize(stateObj?.attributes?.forecast);
+          if (list.length) return list;
+        } catch (_) {}
+        return [];
+      }
+
+      function setClock(now, showTime){
+        const clockEl = document.getElementById('top-clock');
+        if (!clockEl) return;
+        if (!showTime) {
+          clockEl.classList.add('hidden');
+          return;
+        }
+        clockEl.classList.remove('hidden');
+        clockEl.textContent = `${pad2(now.getHours())}:${pad2(now.getMinutes())}`;
+      }
+
+      function renderMeta(now, locale){
+        const monthEl = document.getElementById('meta-month');
+        const weekEl = document.getElementById('meta-week');
+        if (monthEl) monthEl.textContent = new Intl.DateTimeFormat(locale, { month: 'long', year: 'numeric' }).format(now);
+        if (weekEl) weekEl.textContent = `${weekLabelPrefix(locale)} ${String(isoWeekNumber(now)).padStart(2, '0')}`;
+      }
+
+      function renderWeather(settings){
+        const weatherHero = document.getElementById('weather-hero');
+        const weatherMain = document.getElementById('weather-hero-main');
+        const weatherRain = document.getElementById('weather-hero-rain');
+        if (!weatherHero || !weatherMain || !weatherRain) return;
+
+        if (!settings.screensaver.showWeather) {
+          weatherHero.classList.add('hidden');
+          weatherRain.textContent = '';
+          return;
+        }
+
+        weatherHero.classList.remove('hidden');
+        weatherMain.textContent = `${runtime.weather.icon} ${runtime.weather.temp} · ${runtime.weather.state}`;
+        if (settings.screensaver.showRainForecast && runtime.weather.rainText) {
+          weatherRain.textContent = runtime.weather.rainText;
+          weatherRain.classList.remove('hidden');
+        } else {
+          weatherRain.textContent = '';
+          weatherRain.classList.add('hidden');
+        }
+      }
+      function renderRainGauge(settings){
+        const holder = document.getElementById('screensaver-rain-gauge');
+        if (!holder) return;
+        const enabled = settings.screensaver.showRainGauge === true;
+        if (!enabled) {
+          holder.classList.add('hidden');
+          holder.innerHTML = '';
+          return;
+        }
+        const renderer = window.PPRainGaugeIntegration?.renderFromForecastRows;
+        if (typeof renderer !== 'function') {
+          holder.classList.add('hidden');
+          holder.innerHTML = '';
+          return;
+        }
+        const rows = Array.isArray(runtime.rainGaugeRows) ? runtime.rainGaugeRows : [];
+        const safeRows = rows.length ? rows : [{ dt: new Date(), precipitation: 0, precipitation_probability: 0 }];
+        holder.classList.remove('hidden');
+        holder.innerHTML = renderer(safeRows, { lang: runtime.locale.startsWith('de') ? 'de' : 'en', now: new Date(), mode: 'screensaver' });
+      }
+
+      function weekdayIndexShift(rawDay, weekStart){
+        if (weekStart === 'sun') return rawDay;
+        return (rawDay + 6) % 7;
+      }
+
+      function dayEventHtml(date, locale){
+        const key = toIsoDay(date);
+        const events = runtime.eventsByDay.get(key) || [];
+        if (!events.length) return '';
+        return `<div class="events">${events.slice(0, 4).map((ev)=>{
+          const display = buildScreensaverEventDisplay(ev, locale);
+          const time = display.time;
+          const safeTitle = String(ev.title || '').replaceAll('&', '&amp;').replaceAll('<', '&lt;').replaceAll('>', '&gt;');
+          const safeTime = String(time || '').replaceAll('&', '&amp;').replaceAll('<', '&lt;').replaceAll('>', '&gt;');
+          const color = String(ev.color || 'rgba(255,255,255,0.72)').replaceAll('"', '');
+          const icon = String(ev.icon || '').trim().replaceAll('"', '');
+          const iconHtml = icon ? `<iconify-icon class="event-icon" icon="${icon}"></iconify-icon>` : '';
+          return `<div class="event" style="border-left-color:${color}">${iconHtml}<span class="event-main">${safeTime ? `<span class="event-time">${safeTime}</span>` : ''}${safeTitle}</span></div>`;
+        }).join('')}</div>`;
+      }
+
+      function renderWeekGrid(now, settings, locale){
+        const weekStart = settings.screensaver.weekStart || settings.weekStart;
+        const calendarBody = document.getElementById('calendar-body');
+        const calendarHead = document.getElementById('calendar-head');
+        if (!calendarBody || !calendarHead) return;
+
+        const start = new Date(now);
+        const dow = weekStart === 'sun' ? start.getDay() : ((start.getDay() + 6) % 7);
+        start.setDate(start.getDate() - dow);
+        start.setHours(0, 0, 0, 0);
+
+        const weekdayFmt = new Intl.DateTimeFormat(locale, { weekday: 'short' });
+        const dayFmt = new Intl.DateTimeFormat(locale, { day: '2-digit', month: '2-digit' });
+
+        const headRow = document.createElement('tr');
+        calendarHead.innerHTML = '';
+        for (let i = 0; i < 7; i++) {
+          const d = new Date(start);
+          d.setDate(start.getDate() + i);
+          const th = document.createElement('th');
+          th.textContent = weekdayFmt.format(d);
+          headRow.appendChild(th);
+        }
+        calendarHead.appendChild(headRow);
+
+        const row = document.createElement('tr');
+        calendarBody.innerHTML = '';
+        for (let i = 0; i < 7; i++) {
+          const d = new Date(start);
+          d.setDate(start.getDate() + i);
+          const td = document.createElement('td');
+          if (d.toDateString() === now.toDateString()) td.classList.add('today');
+          td.innerHTML = `<div class="day-label"><span>${dayFmt.format(d)}</span></div>${dayEventHtml(d, locale)}`;
+          row.appendChild(td);
+        }
+        calendarBody.appendChild(row);
+      }
+
+      function renderMonthGrid(now, settings, locale){
+        const weekStart = settings.screensaver.weekStart || settings.weekStart;
+        const calendarBody = document.getElementById('calendar-body');
+        const calendarHead = document.getElementById('calendar-head');
+        if (!calendarBody || !calendarHead) return;
+
+        const first = new Date(now.getFullYear(), now.getMonth(), 1);
+        const last = new Date(now.getFullYear(), now.getMonth() + 1, 0);
+        const totalDays = last.getDate();
+
+        const weekdayFmt = new Intl.DateTimeFormat(locale, { weekday: 'short' });
+        const headRow = document.createElement('tr');
+        calendarHead.innerHTML = '';
+        for (let i = 0; i < 7; i++) {
+          const base = new Date(2024, 0, weekStart === 'sun' ? 7 + i : 1 + i);
+          const th = document.createElement('th');
+          th.textContent = weekdayFmt.format(base);
+          headRow.appendChild(th);
+        }
+        calendarHead.appendChild(headRow);
+
+        const offset = weekdayIndexShift(first.getDay(), weekStart);
+        const rows = Math.ceil((offset + totalDays) / 7);
+        calendarBody.innerHTML = '';
+
+        let day = 1;
+        for (let r = 0; r < rows; r++) {
+          const tr = document.createElement('tr');
+          for (let c = 0; c < 7; c++) {
+            const idx = r * 7 + c;
+            const td = document.createElement('td');
+            if (idx < offset || day > totalDays) {
+              td.classList.add('empty');
+              td.innerHTML = '&nbsp;';
+            } else {
+              const d = new Date(now.getFullYear(), now.getMonth(), day);
+              if (d.toDateString() === now.toDateString()) td.classList.add('today');
+              td.innerHTML = `<div class="day-label"><span>${day}</span></div>${dayEventHtml(d, locale)}`;
+              day += 1;
+            }
+            tr.appendChild(td);
+          }
+          calendarBody.appendChild(tr);
+        }
+      }
+
+      function renderGrid(now, settings, locale){
+        const overlay = document.getElementById('calendar-overlay');
+        const head = document.getElementById('calendar-head');
+        const body = document.getElementById('calendar-body');
+        if (!overlay || !head || !body) return;
+
+        if (settings.screensaver.gridMode === 'off') {
+          head.innerHTML = '';
+          body.innerHTML = '';
+          overlay.style.minHeight = '0';
+          overlay.style.paddingBottom = '1rem';
+          return;
+        }
+
+        overlay.style.minHeight = settings.screensaver.gridMode === 'month' ? '50vh' : '22vh';
+        overlay.style.paddingBottom = '1.2rem';
+
+        if (settings.screensaver.gridMode === 'month') renderMonthGrid(now, settings, locale);
+        else renderWeekGrid(now, settings, locale);
+      }
+
+      async function refreshData(basePath){
+        const now = new Date();
+        const settings = runtime.settings;
+        const hass = runtime.hass;
+
+        const rangeStart = settings.screensaver.gridMode === 'month'
+          ? new Date(now.getFullYear(), now.getMonth(), 1)
+          : new Date(now.getFullYear(), now.getMonth(), now.getDate() - ((settings.screensaver.weekStart === 'sun') ? now.getDay() : ((now.getDay() + 6) % 7)));
+        const rangeEnd = settings.screensaver.gridMode === 'month'
+          ? new Date(now.getFullYear(), now.getMonth() + 1, 0)
+          : new Date(rangeStart.getFullYear(), rangeStart.getMonth(), rangeStart.getDate() + 6);
+
+        const events = await fetchCalendarEvents(hass, settings.calendarSources || [], rangeStart, rangeEnd);
+        runtime.eventsByDay = groupEventsByDay(events);
+
+        runtime.weather = await readWeather(hass, settings, runtime.locale);
+        runtime.rainGaugeRows = settings.screensaver.showRainGauge
+          ? await fetchHourlyRainRows(hass, String(settings.weather?.entityId || '').trim())
+          : [];
+
+        const bgUrl = await pickBackgroundUrl(basePath, settings, now);
+        if (bgUrl) {
+          document.body.style.backgroundImage = `linear-gradient(120deg, rgba(5, 11, 18, 0.38), rgba(5, 11, 18, 0.2)), url("${bgUrl}")`;
+        }
+      }
+
+      function renderNow(){
+        const now = new Date();
+        const settings = runtime.settings;
+        setClock(now, settings.screensaver.showTime);
+        renderMeta(now, runtime.locale);
+        renderWeather(settings);
+        renderRainGauge(settings);
+        renderGrid(now, settings, runtime.locale);
+      }
+      function renderClockTick(){
+        const now = new Date();
+        setClock(now, runtime.settings?.screensaver?.showTime !== false);
+      }
+
+      async function init(){
+        const basePath = normalizeBasePath(window.BASE_PATH || detectBasePath());
+        window.BASE_PATH = basePath;
+
+        runtime.settings = await loadGlobalSettings(basePath);
+        runtime.locale = getLocaleFromSetting(runtime.settings.screensaver.language);
+        document.documentElement.lang = runtime.locale;
+        runtime.hass = getHass();
+
+        await refreshData(basePath);
+        renderNow();
+
+        setInterval(()=>{ renderClockTick(); }, 1000);
+        setInterval(async ()=>{
+          try {
+            runtime.settings = await loadGlobalSettings(basePath);
+            runtime.locale = getLocaleFromSetting(runtime.settings.screensaver.language);
+            document.documentElement.lang = runtime.locale;
+            runtime.hass = getHass();
+            await refreshData(basePath);
+            renderNow();
+          } catch (_) {}
+        }, FULL_REFRESH_MS);
+      }
+
+      init().catch(()=>{});
+    })();
+  </script>
+</body>
+</html>

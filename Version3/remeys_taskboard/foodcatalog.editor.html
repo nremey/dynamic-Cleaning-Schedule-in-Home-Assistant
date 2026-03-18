@@ -1,0 +1,1167 @@
+<!doctype html>
+<html lang="de">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Food Catalog Editor</title>
+  <script src="https://code.iconify.design/iconify-icon/2.1.0/iconify-icon.min.js" defer></script>
+  <style>
+    :root {
+      --bg: #eff4fb;
+      --card: #ffffff;
+      --text: #0e223a;
+      --muted: #5f6d81;
+      --line: #d4dfef;
+      --accent: #1d4ed8;
+      --accent-soft: #dbeafe;
+      --danger: #b91c1c;
+      --radius: 12px;
+      --shadow: 0 8px 26px rgba(15, 33, 56, 0.08);
+    }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      font-family: "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+      color: var(--text);
+      background:
+        radial-gradient(circle at 4% -2%, #dbeafe 0%, transparent 38%),
+        radial-gradient(circle at 102% 8%, #fde68a 0%, transparent 22%),
+        linear-gradient(180deg, #f8fbff 0%, var(--bg) 100%);
+    }
+    .app { max-width: 1600px; margin: 0 auto; padding: 12px; display: grid; gap: 10px; }
+    .toolbar {
+      background: var(--card);
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+      box-shadow: var(--shadow);
+      padding: 10px;
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      align-items: center;
+    }
+    .title { margin: 0; font-size: 19px; font-weight: 700; margin-right: auto; }
+    .status { font-size: 12px; color: var(--muted); min-height: 16px; }
+
+    button, select, input {
+      border: 1px solid var(--line);
+      border-radius: 9px;
+      padding: 7px 10px;
+      font-size: 13px;
+      background: #fff;
+      color: var(--text);
+      outline: none;
+    }
+    input, select { width: 100%; }
+    button { cursor: pointer; font-weight: 600; }
+    button:hover { border-color: #b8c8de; }
+    .btn-primary { background: var(--accent); border-color: var(--accent); color: #fff; }
+    .btn-danger { color: var(--danger); border-color: #f1b6b6; }
+
+    .catalog {
+      display: grid;
+      gap: 10px;
+      align-content: start;
+    }
+    .cat {
+      background: var(--card);
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+      box-shadow: var(--shadow);
+      overflow: hidden;
+    }
+    .cat-head {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 8px;
+      padding: 10px;
+      border-bottom: 1px solid var(--line);
+      background: #f8fbff;
+    }
+    .cat-title-wrap { display: grid; gap: 1px; min-width: 0; }
+    .cat-title { font-size: 15px; font-weight: 700; }
+    .cat-id { font-size: 11px; color: var(--muted); }
+
+    .items-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(170px, 1fr));
+      gap: 8px;
+      padding: 10px;
+    }
+    .item-card {
+      border: 1px solid var(--line);
+      border-radius: 10px;
+      background: #fff;
+      padding: 8px;
+      min-height: 54px;
+      display: grid;
+      grid-template-columns: 24px 1fr;
+      gap: 8px;
+      align-items: center;
+      text-align: left;
+    }
+    .item-card:hover { border-color: var(--accent); background: var(--accent-soft); }
+    .item-card iconify-icon { font-size: 20px; }
+    .item-label {
+      font-size: 13px;
+      font-weight: 600;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+    .item-empty { padding: 12px; color: var(--muted); font-size: 12px; }
+
+    dialog {
+      border: 1px solid var(--line);
+      border-radius: 12px;
+      width: min(900px, calc(100vw - 18px));
+      max-height: min(90vh, 860px);
+      background: #fff;
+      color: var(--text);
+      padding: 0;
+    }
+    dialog::backdrop { background: rgba(0,0,0,.45); }
+    .dlg-form {
+      display: grid;
+      gap: 10px;
+      padding: 12px;
+      min-height: 380px;
+      grid-template-rows: auto auto auto auto 1fr auto;
+    }
+    .dlg-title { margin: 0; font-size: 17px; }
+    .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+    .grid-3 { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 8px; }
+    label { display: grid; gap: 4px; font-size: 12px; color: var(--muted); }
+
+    .icon-edit {
+      display: grid;
+      grid-template-columns: 34px 1fr auto;
+      gap: 6px;
+      align-items: center;
+    }
+    .icon-preview {
+      width: 34px;
+      height: 34px;
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      background: #fff;
+      display: grid;
+      place-items: center;
+    }
+    .icon-preview iconify-icon { font-size: 20px; }
+
+    .dlg-actions {
+      display: flex;
+      justify-content: space-between;
+      gap: 8px;
+      margin-top: 6px;
+    }
+    .dlg-actions-right { display: flex; gap: 8px; }
+
+    #icon-picker-dialog { width: min(900px, calc(100vw - 18px)); }
+    #icon-picker-form {
+      display: grid;
+      grid-template-rows: auto auto auto 1fr auto;
+      gap: 8px;
+      padding: 12px;
+      min-height: 460px;
+    }
+    .picker-current {
+      border: 1px solid var(--line);
+      border-radius: 10px;
+      background: #f8fbff;
+      padding: 8px;
+      display: grid;
+      grid-template-columns: 40px 1fr;
+      gap: 8px;
+      align-items: center;
+    }
+    .picker-current-preview {
+      width: 40px;
+      height: 40px;
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      background: #fff;
+      display: grid;
+      place-items: center;
+    }
+    .picker-current-preview iconify-icon { font-size: 22px; }
+    .picker-current-name {
+      font-size: 12px;
+      font-weight: 600;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+    #icon-picker-list {
+      border: 1px solid var(--line);
+      border-radius: 10px;
+      padding: 8px;
+      overflow: auto;
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(190px, 1fr));
+      gap: 6px;
+      align-content: start;
+    }
+    .icon-opt {
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      padding: 6px;
+      display: grid;
+      grid-template-columns: 22px 1fr;
+      gap: 6px;
+      align-items: center;
+      cursor: pointer;
+      background: #fff;
+      text-align: left;
+    }
+    .icon-opt:hover { border-color: var(--accent); background: var(--accent-soft); }
+    .icon-opt iconify-icon { font-size: 18px; }
+    .icon-name { font-size: 12px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+    .muted { color: var(--muted); font-size: 12px; }
+
+    @media (max-width: 980px) {
+      .grid-2, .grid-3 { grid-template-columns: 1fr; }
+      .items-grid { grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); }
+    }
+  </style>
+</head>
+<body>
+  <main class="app">
+    <section class="toolbar">
+      <h1 id="page-title" class="title">Food Catalog Editor</h1>
+      <select id="lang-select" style="width:auto; min-width:110px;">
+        <option value="de">Deutsch</option>
+        <option value="en">English</option>
+      </select>
+      <button id="add-category-btn" type="button">+ Neue Kategorie</button>
+      <button id="reload-btn" type="button">Reload</button>
+      <button id="save-btn" class="btn-primary" type="button">Save catalog</button>
+      <span id="status" class="status"></span>
+    </section>
+
+    <section id="catalog" class="catalog"></section>
+  </main>
+
+  <dialog id="item-dialog">
+    <form id="item-form" class="dlg-form" method="dialog">
+      <h3 id="item-dlg-title" class="dlg-title">Item</h3>
+
+      <div class="grid-2">
+        <label>Category
+          <input id="item-category" type="text" disabled />
+        </label>
+        <label>Item id
+          <input id="item-id" type="text" required />
+        </label>
+      </div>
+
+      <div class="grid-2">
+        <label>Label DE
+          <input id="item-label-de" type="text" />
+        </label>
+        <label>Label EN
+          <input id="item-label-en" type="text" />
+        </label>
+      </div>
+
+      <div class="grid-2">
+        <label>Aliases DE (comma-separated)
+          <input id="item-aliases-de" type="text" placeholder="z.B. Paprika, Peperoni" />
+        </label>
+        <label>Aliases EN (comma-separated)
+          <input id="item-aliases-en" type="text" placeholder="e.g. bell pepper, capsicum" />
+        </label>
+      </div>
+
+      <label>Icon
+        <div class="icon-edit">
+          <div id="item-icon-preview" class="icon-preview"><iconify-icon icon="mdi:cart-outline"></iconify-icon></div>
+          <input id="item-icon" type="text" />
+          <button id="item-icon-pick" type="button">Pick</button>
+        </div>
+      </label>
+
+      <div class="muted">Click an item card to edit. Add item opens the same form.</div>
+
+      <div class="dlg-actions">
+        <button id="item-delete" class="btn-danger" type="button">Delete</button>
+        <div class="dlg-actions-right">
+          <button id="item-cancel" type="button">Cancel</button>
+          <button id="item-save" class="btn-primary" type="submit">Save item</button>
+        </div>
+      </div>
+    </form>
+  </dialog>
+
+  <dialog id="icon-picker-dialog">
+    <form id="icon-picker-form" method="dialog">
+      <h3 style="margin:0;">Select icon</h3>
+      <input id="icon-picker-search" type="search" placeholder="Search icon e.g. apple or mdi:apple" />
+      <div class="picker-current">
+        <div id="picker-current-preview" class="picker-current-preview"><iconify-icon icon="mdi:cart-outline"></iconify-icon></div>
+        <div id="picker-current-name" class="picker-current-name">mdi:cart-outline</div>
+      </div>
+      <div id="icon-picker-list"></div>
+      <div style="display:flex; justify-content:space-between; gap:8px; align-items:center;">
+        <span id="icon-picker-state" class="muted"></span>
+        <button id="icon-picker-close" type="button">Close</button>
+      </div>
+    </form>
+  </dialog>
+
+  <script>
+    (function(){
+      'use strict';
+
+      const CATALOG_URL = './integrations/product-catalog.json';
+      const CATALOG_FILE_NAME = 'product-catalog.json';
+      const CATALOG_DIR_NAME = 'integrations';
+      const WEBHOOK_ID = 'taskboard_textcontentfile_export';
+
+      const UI = {
+        de: {
+          pageTitle: 'Food Catalog Editor',
+          addCategory: '+ Neue Kategorie',
+          reload: 'Neu laden',
+          saveCatalog: 'Katalog speichern',
+          categoryEdit: 'Kategorie bearbeiten',
+          categoryDelete: 'Kategorie loeschen',
+          addItem: '+ Neues Item',
+          emptyCategory: 'Noch keine Items in dieser Kategorie.',
+          editItem: 'Item bearbeiten',
+          newItem: 'Neues Item',
+          saveItem: 'Item speichern',
+          delete: 'Loeschen',
+          cancel: 'Abbrechen',
+          loading: 'Katalog wird geladen...',
+          loaded: 'Katalog geladen.',
+          saving: 'Katalog wird gespeichert...',
+          saved: 'Katalog gespeichert.',
+          noExport: 'Nichts zu speichern.',
+          collapse: 'Einklappen',
+          expand: 'Ausklappen'
+        },
+        en: {
+          pageTitle: 'Food Catalog Editor',
+          addCategory: '+ New category',
+          reload: 'Reload',
+          saveCatalog: 'Save catalog',
+          categoryEdit: 'Edit category',
+          categoryDelete: 'Delete category',
+          addItem: '+ New item',
+          emptyCategory: 'No items in this category yet.',
+          editItem: 'Edit item',
+          newItem: 'New item',
+          saveItem: 'Save item',
+          delete: 'Delete',
+          cancel: 'Cancel',
+          loading: 'Loading catalog...',
+          loaded: 'Catalog loaded.',
+          saving: 'Saving catalog...',
+          saved: 'Catalog saved.',
+          noExport: 'Nothing to save.',
+          collapse: 'Collapse',
+          expand: 'Expand'
+        },
+      };
+
+      const els = {
+        pageTitle: document.getElementById('page-title'),
+        langSelect: document.getElementById('lang-select'),
+        addCategoryBtn: document.getElementById('add-category-btn'),
+        reloadBtn: document.getElementById('reload-btn'),
+        saveBtn: document.getElementById('save-btn'),
+        status: document.getElementById('status'),
+        catalog: document.getElementById('catalog'),
+
+        itemDlg: document.getElementById('item-dialog'),
+        itemForm: document.getElementById('item-form'),
+        itemDlgTitle: document.getElementById('item-dlg-title'),
+        itemCategory: document.getElementById('item-category'),
+        itemId: document.getElementById('item-id'),
+        itemLabelDe: document.getElementById('item-label-de'),
+        itemLabelEn: document.getElementById('item-label-en'),
+        itemAliasesDe: document.getElementById('item-aliases-de'),
+        itemAliasesEn: document.getElementById('item-aliases-en'),
+        itemIcon: document.getElementById('item-icon'),
+        itemIconPreview: document.getElementById('item-icon-preview'),
+        itemIconPick: document.getElementById('item-icon-pick'),
+        itemDelete: document.getElementById('item-delete'),
+        itemCancel: document.getElementById('item-cancel'),
+        itemSave: document.getElementById('item-save'),
+
+        iconDlg: document.getElementById('icon-picker-dialog'),
+        iconSearch: document.getElementById('icon-picker-search'),
+        iconList: document.getElementById('icon-picker-list'),
+        iconState: document.getElementById('icon-picker-state'),
+        iconClose: document.getElementById('icon-picker-close'),
+        pickerCurrentPreview: document.getElementById('picker-current-preview'),
+        pickerCurrentName: document.getElementById('picker-current-name')
+      };
+
+      const state = {
+        lang: 'de',
+        categories: [],
+        collapsedCategoryIds: new Set(),
+        itemEdit: {
+          mode: 'create',
+          categoryId: '',
+          itemIndex: -1,
+          originalItemId: ''
+        },
+        iconInputTarget: null,
+        iconPool: null,
+        iconSearchCache: new Map(),
+        iconSearchTimer: null,
+        iconSearchToken: 0,
+        saveInFlight: false
+      };
+      const COLLAPSE_STORAGE_KEY = 'foodcatalog_editor_collapsed_categories_v1';
+
+      function t(key){
+        const dict = UI[state.lang] || UI.de;
+        return dict[key] || key;
+      }
+
+      function setStatus(msg, isError){
+        els.status.textContent = String(msg || '');
+        els.status.style.color = isError ? '#b91c1c' : '#5f6d81';
+      }
+
+      function loadCollapsedCategories(){
+        try {
+          const raw = localStorage.getItem(COLLAPSE_STORAGE_KEY);
+          if (!raw) return new Set();
+          const arr = JSON.parse(raw);
+          if (!Array.isArray(arr)) return new Set();
+          return new Set(arr.map(v => String(v || '').trim()).filter(Boolean));
+        } catch (_) {
+          return new Set();
+        }
+      }
+
+      function saveCollapsedCategories(){
+        try {
+          localStorage.setItem(COLLAPSE_STORAGE_KEY, JSON.stringify(Array.from(state.collapsedCategoryIds)));
+        } catch (_) {}
+      }
+
+      function toBase64Utf8(str){
+        return btoa(unescape(encodeURIComponent(String(str || ''))));
+      }
+
+      function safeObj(v){ return v && typeof v === 'object' ? v : {}; }
+
+      function labelForI18n(v, fallback){
+        if (typeof v === 'string') return v || fallback || '';
+        const o = safeObj(v);
+        return String(o[state.lang] || o.de || o.en || fallback || '').trim();
+      }
+
+      function getHaOrigin(){
+        try {
+          if (window.top && window.top.location && /^https?:/.test(window.top.location.origin)) return window.top.location.origin;
+        } catch (_) {}
+        if (typeof window.HA_ORIGIN === 'string' && /^https?:/.test(window.HA_ORIGIN)) return window.HA_ORIGIN;
+        if (typeof window.location.origin === 'string' && /^https?:/.test(window.location.origin)) return window.location.origin;
+        return '';
+      }
+
+      function detectBaseDirFromLocation(){
+        const pathname = String(window.location.pathname || '').trim();
+        if (!pathname) return '';
+        let dir = pathname;
+        if (!dir.endsWith('/')) {
+          const idx = dir.lastIndexOf('/');
+          dir = idx >= 0 ? dir.slice(0, idx + 1) : '/';
+        }
+        dir = dir.replace(/\/+$/, '');
+        if (!dir) return '';
+        if (dir.startsWith('/local/')) return '/config/www/' + dir.slice('/local/'.length);
+        if (dir.startsWith('/www/')) return '/config/www/' + dir.slice('/www/'.length);
+        return '/config/www' + dir;
+      }
+
+      function resolveSaveDir(){
+        let parentBase = '';
+        try {
+          const p = window.parent;
+          parentBase = p && typeof p.PP_FILE_SAVE_DIR === 'string' ? p.PP_FILE_SAVE_DIR.trim() : '';
+        } catch (_) {}
+        if (parentBase) return parentBase.replace(/\/+$/, '') + '/' + CATALOG_DIR_NAME;
+
+        const base = detectBaseDirFromLocation();
+        if (!base) return '';
+        if (/\/integrations$/i.test(base)) return base;
+        return base.replace(/\/+$/, '') + '/integrations';
+      }
+
+      async function callWebhook(payload) {
+        const webhookUrl = `${getHaOrigin()}/api/webhook/${WEBHOOK_ID}`;
+        const res = await fetch(webhookUrl, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(payload)
+        });
+        const text = await res.text();
+        if (!res.ok) throw new Error(`Webhook ${res.status} – ${text}`);
+        return text || 'OK';
+      }
+
+      function resolveWebhookCaller(){
+        try {
+          const p = window.parent;
+          if (p && typeof p.callWebhook === 'function') return p.callWebhook.bind(p);
+        } catch (_) {}
+        return callWebhook;
+      }
+
+      function normalizeAliasesObject(aliasesRaw){
+        const aliases = safeObj(aliasesRaw);
+        const out = {};
+        ['de', 'en', 'ja'].forEach(lang => {
+          const arr = Array.isArray(aliases[lang]) ? aliases[lang] : [];
+          const seen = new Set();
+          out[lang] = arr
+            .map(v => String(v || '').trim())
+            .filter(v => {
+              const key = v.toLowerCase();
+              if (!v || seen.has(key)) return false;
+              seen.add(key);
+              return true;
+            });
+        });
+        return out;
+      }
+
+      function normalizeItemForCatalog(itemRaw){
+        const item = safeObj(itemRaw);
+        const label = safeObj(item.label);
+        return {
+          id: String(item.id || '').trim(),
+          label: {
+            de: String(label.de || ''),
+            en: String(label.en || ''),
+            ja: String(label.ja || '')
+          },
+          aliases: normalizeAliasesObject(item.aliases),
+          icon: String(item.icon || 'mdi:cart-outline').trim() || 'mdi:cart-outline'
+        };
+      }
+
+      function normalizeCategoryForCatalog(catRaw){
+        const cat = safeObj(catRaw);
+        const title = safeObj(cat.title);
+        return {
+          id: String(cat.id || '').trim(),
+          title: {
+            de: String(title.de || ''),
+            en: String(title.en || ''),
+            ja: String(title.ja || '')
+          },
+          items: Array.isArray(cat.items) ? cat.items.map(normalizeItemForCatalog) : []
+        };
+      }
+
+      async function applyCatalogOperation(operation, payloadObj){
+        const saveDir = resolveSaveDir();
+        if (!saveDir) throw new Error('Save path not detected.');
+        const call = resolveWebhookCaller();
+        const payloadJson = JSON.stringify(payloadObj || {});
+        await call({
+          savingpath: saveDir,
+          filename: CATALOG_FILE_NAME,
+          operation: String(operation || '').trim(),
+          payload: payloadObj || {},
+          payload_b64: toBase64Utf8(payloadJson)
+        });
+      }
+
+      async function item_add(categoryId, item){
+        return applyCatalogOperation('item_add', {
+          category_id: String(categoryId || ''),
+          item: normalizeItemForCatalog(item)
+        });
+      }
+
+      async function item_edit(targetId, categoryId, item){
+        return applyCatalogOperation('item_edit', {
+          target_id: String(targetId || ''),
+          category_id: String(categoryId || ''),
+          item: normalizeItemForCatalog(item)
+        });
+      }
+
+      async function item_delete(targetId, categoryId){
+        return applyCatalogOperation('item_delete', {
+          target_id: String(targetId || ''),
+          category_id: String(categoryId || '')
+        });
+      }
+
+      async function foodgoup_add(category){
+        const c = normalizeCategoryForCatalog(category);
+        return applyCatalogOperation('foodgoup_add', {
+          id: String(c.id || ''),
+          category: c
+        });
+      }
+
+      async function foodgoup_edit(targetId, category){
+        return applyCatalogOperation('foodgoup_edit', {
+          target_id: String(targetId || ''),
+          category: normalizeCategoryForCatalog(category)
+        });
+      }
+
+      async function foodgoup_delete(targetId){
+        return applyCatalogOperation('foodgoup_delete', {
+          target_id: String(targetId || '')
+        });
+      }
+
+      function normalizeCatalog(raw){
+        const src = safeObj(raw);
+        const cats = Array.isArray(src.categories) ? src.categories : [];
+        return cats.map((cat, i)=>{
+          const norm = normalizeCategoryForCatalog(cat);
+          return {
+            id: String(norm.id || ('category_' + (i + 1))).trim() || ('category_' + (i + 1)),
+            title: norm.title,
+            items: Array.isArray(norm.items) ? norm.items.map((item, j) => ({
+              ...item,
+              id: String(item.id || ('item_' + (j + 1))).trim() || ('item_' + (j + 1))
+            })) : []
+          };
+        });
+      }
+
+      function applyUiLabels(){
+        els.pageTitle.textContent = t('pageTitle');
+        els.addCategoryBtn.textContent = t('addCategory');
+        els.reloadBtn.textContent = t('reload');
+        els.saveBtn.textContent = t('saveCatalog');
+        els.itemSave.textContent = t('saveItem');
+        els.itemDelete.textContent = t('delete');
+        els.itemCancel.textContent = t('cancel');
+      }
+
+      function renderCatalog(){
+        els.catalog.innerHTML = '';
+        state.categories.forEach(cat => {
+          const sec = document.createElement('section');
+          sec.className = 'cat';
+
+          const head = document.createElement('div');
+          head.className = 'cat-head';
+
+          const titleWrap = document.createElement('div');
+          titleWrap.className = 'cat-title-wrap';
+          const title = document.createElement('div');
+          title.className = 'cat-title';
+          title.textContent = labelForI18n(cat.title, cat.id) || cat.id;
+          const id = document.createElement('div');
+          id.className = 'cat-id';
+          id.textContent = cat.id;
+          titleWrap.appendChild(title);
+          titleWrap.appendChild(id);
+
+          const addBtn = document.createElement('button');
+          addBtn.type = 'button';
+          addBtn.textContent = t('addItem');
+          addBtn.addEventListener('click', ()=> openItemDialog('create', cat.id, -1));
+
+          const editBtn = document.createElement('button');
+          editBtn.type = 'button';
+          editBtn.textContent = t('categoryEdit');
+          editBtn.addEventListener('click', async ()=> {
+            try {
+              await editCategory(cat.id);
+            } catch (err) {
+              setStatus(String(err && err.message ? err.message : err), true);
+            }
+          });
+
+          const delBtn = document.createElement('button');
+          delBtn.type = 'button';
+          delBtn.className = 'btn-danger';
+          delBtn.textContent = t('categoryDelete');
+          delBtn.addEventListener('click', async ()=> {
+            try {
+              await deleteCategory(cat.id);
+            } catch (err) {
+              setStatus(String(err && err.message ? err.message : err), true);
+            }
+          });
+
+          const actions = document.createElement('div');
+          actions.style.display = 'flex';
+          actions.style.gap = '8px';
+          const isCollapsed = state.collapsedCategoryIds.has(cat.id);
+          const toggleBtn = document.createElement('button');
+          toggleBtn.type = 'button';
+          toggleBtn.textContent = isCollapsed ? '▸ ' + t('expand') : '▾ ' + t('collapse');
+          toggleBtn.addEventListener('click', ()=>{
+            if (state.collapsedCategoryIds.has(cat.id)) state.collapsedCategoryIds.delete(cat.id);
+            else state.collapsedCategoryIds.add(cat.id);
+            saveCollapsedCategories();
+            renderCatalog();
+          });
+          actions.appendChild(toggleBtn);
+          actions.appendChild(addBtn);
+          actions.appendChild(editBtn);
+          actions.appendChild(delBtn);
+
+          head.appendChild(titleWrap);
+          head.appendChild(actions);
+
+          const grid = document.createElement('div');
+          grid.className = 'items-grid';
+
+          if (isCollapsed) {
+            grid.style.display = 'none';
+          } else if (!cat.items.length) {
+            const empty = document.createElement('div');
+            empty.className = 'item-empty';
+            empty.textContent = t('emptyCategory');
+            grid.appendChild(empty);
+          } else {
+            cat.items.forEach((item, idx) => {
+              const card = document.createElement('button');
+              card.type = 'button';
+              card.className = 'item-card';
+              card.title = item.id;
+              card.innerHTML =
+                '<iconify-icon icon="' + (item.icon || 'mdi:cart-outline') + '"></iconify-icon>' +
+                '<span class="item-label">' + (labelForI18n(item.label, item.id) || item.id) + '</span>';
+              card.addEventListener('click', ()=> openItemDialog('edit', cat.id, idx));
+              grid.appendChild(card);
+            });
+          }
+
+          sec.appendChild(head);
+          sec.appendChild(grid);
+          els.catalog.appendChild(sec);
+        });
+      }
+
+      function findCategoryById(id){
+        return state.categories.find(c => c.id === id) || null;
+      }
+
+      function slugify(v){
+        return String(v || '')
+          .trim()
+          .toLowerCase()
+          .normalize('NFKD')
+          .replace(/[\u0300-\u036f]/g, '')
+          .replace(/[^a-z0-9]+/g, '_')
+          .replace(/^_+|_+$/g, '');
+      }
+
+      async function addCategory(){
+        const baseName = prompt('Category name (DE/EN):', '');
+        if (baseName === null) return;
+        const name = String(baseName || '').trim() || 'New Category';
+        const baseId = slugify(name) || 'new_category';
+        const ids = new Set(state.categories.map(c => c.id));
+        let id = baseId;
+        let i = 2;
+        while (ids.has(id)) {
+          id = baseId + '_' + i;
+          i += 1;
+        }
+        const nextCategory = {
+          id,
+          title: { de: name, en: name, ja: '' },
+          items: []
+        };
+        await foodgoup_add(nextCategory);
+        state.categories.push(nextCategory);
+        renderCatalog();
+        setStatus(t('saved') + ' [' + id + ']');
+      }
+
+      async function editCategory(categoryId){
+        const cat = findCategoryById(categoryId);
+        if (!cat) return;
+        const current = String(cat.title.de || cat.title.en || cat.id || '').trim();
+        const nextName = prompt('Category name (DE/EN):', current);
+        if (nextName === null) return;
+        const label = String(nextName || '').trim();
+        if (!label) return;
+
+        const next = {
+          ...cat,
+          title: { de: label, en: label, ja: String(cat.title && cat.title.ja || '') }
+        };
+        await foodgoup_edit(categoryId, next);
+        const idx = state.categories.findIndex(c => c.id === categoryId);
+        if (idx >= 0) state.categories[idx] = next;
+        renderCatalog();
+        setStatus(t('saved') + ' [' + categoryId + ']');
+      }
+
+      async function deleteCategory(categoryId){
+        const cat = findCategoryById(categoryId);
+        if (!cat) return;
+        const ok = confirm('Delete category "' + (cat.title.de || cat.id) + '"?');
+        if (!ok) return;
+        await foodgoup_delete(categoryId);
+        state.categories = state.categories.filter(c => c.id !== categoryId);
+        renderCatalog();
+        setStatus(t('saved') + ' [' + categoryId + ']');
+      }
+
+      function aliasesToInputValue(arr){
+        return (Array.isArray(arr) ? arr : [])
+          .map(v => String(v || '').trim())
+          .filter(Boolean)
+          .join(', ');
+      }
+
+      function parseAliasesInput(raw){
+        const seen = new Set();
+        return String(raw || '')
+          .split(',')
+          .map(v => v.trim())
+          .filter(v => {
+            const key = v.toLowerCase();
+            if (!v || seen.has(key)) return false;
+            seen.add(key);
+            return true;
+          });
+      }
+
+      function updateItemIconPreview(){
+        const icon = String(els.itemIcon.value || '').trim() || 'mdi:cart-outline';
+        els.itemIconPreview.innerHTML = '<iconify-icon icon="' + icon + '"></iconify-icon>';
+      }
+
+      function buildItemPayloadFromDialog(){
+        const baseId = String(els.itemId.value || '').trim();
+        const fallback = String(els.itemLabelEn.value || els.itemLabelDe.value || 'item').trim();
+        const id = baseId || fallback.toLowerCase().replace(/[^a-z0-9]+/g, '_').replace(/^_+|_+$/g, '') || 'item';
+        return {
+          id,
+          label: {
+            de: String(els.itemLabelDe.value || ''),
+            en: String(els.itemLabelEn.value || ''),
+            ja: ''
+          },
+          aliases: {
+            de: parseAliasesInput(els.itemAliasesDe.value),
+            en: parseAliasesInput(els.itemAliasesEn.value),
+            ja: []
+          },
+          icon: String(els.itemIcon.value || '').trim() || 'mdi:cart-outline'
+        };
+      }
+
+      function openItemDialog(mode, categoryId, itemIndex){
+        state.itemEdit.mode = mode;
+        state.itemEdit.categoryId = categoryId;
+        state.itemEdit.itemIndex = itemIndex;
+        state.itemEdit.originalItemId = '';
+
+        const cat = findCategoryById(categoryId);
+        if (!cat) return;
+
+        let item = null;
+        if (mode === 'edit' && itemIndex >= 0 && itemIndex < cat.items.length) {
+          item = cat.items[itemIndex];
+          state.itemEdit.originalItemId = String(item.id || '').trim();
+        }
+
+        els.itemDlgTitle.textContent = mode === 'edit' ? t('editItem') : t('newItem');
+        els.itemCategory.value = labelForI18n(cat.title, cat.id) + ' (' + cat.id + ')';
+        els.itemDelete.style.visibility = mode === 'edit' ? 'visible' : 'hidden';
+
+        els.itemId.value = item ? item.id : '';
+        els.itemLabelDe.value = item ? item.label.de : '';
+        els.itemLabelEn.value = item ? item.label.en : '';
+        els.itemAliasesDe.value = item ? aliasesToInputValue(item.aliases && item.aliases.de) : '';
+        els.itemAliasesEn.value = item ? aliasesToInputValue(item.aliases && item.aliases.en) : '';
+        els.itemIcon.value = item ? item.icon : 'mdi:cart-outline';
+        updateItemIconPreview();
+
+        if (typeof els.itemDlg.showModal === 'function') els.itemDlg.showModal();
+      }
+
+      async function saveItemFromDialog(){
+        const cat = findCategoryById(state.itemEdit.categoryId);
+        if (!cat) return;
+
+        const payload = normalizeItemForCatalog(buildItemPayloadFromDialog());
+        if (!payload.id) return;
+
+        if (state.itemEdit.mode === 'edit' && state.itemEdit.itemIndex >= 0 && state.itemEdit.itemIndex < cat.items.length) {
+          const oldItem = cat.items[state.itemEdit.itemIndex];
+          payload.label.ja = String(oldItem && oldItem.label && oldItem.label.ja || '');
+          payload.aliases.ja = Array.isArray(oldItem && oldItem.aliases && oldItem.aliases.ja)
+            ? oldItem.aliases.ja.map(v => String(v || '')).filter(Boolean)
+            : [];
+          const targetId = state.itemEdit.originalItemId || String(oldItem && oldItem.id || '');
+          await item_edit(targetId, cat.id, payload);
+          cat.items[state.itemEdit.itemIndex] = payload;
+          setStatus(t('saved') + ' [' + payload.id + ']');
+        } else {
+          await item_add(cat.id, payload);
+          cat.items.push(payload);
+          setStatus(t('saved') + ' [' + payload.id + ']');
+        }
+
+        els.itemDlg.close();
+        renderCatalog();
+      }
+
+      async function deleteItemFromDialog(){
+        const cat = findCategoryById(state.itemEdit.categoryId);
+        if (!cat) return;
+        const idx = state.itemEdit.itemIndex;
+        if (idx < 0 || idx >= cat.items.length) return;
+        const target = String(state.itemEdit.originalItemId || cat.items[idx].id || '').trim();
+        if (!target) return;
+        await item_delete(target, cat.id);
+        cat.items.splice(idx, 1);
+        els.itemDlg.close();
+        renderCatalog();
+        setStatus(t('saved') + ' [' + target + ']');
+      }
+
+      function collectAllIconCandidates(){
+        const used = [];
+        state.categories.forEach(cat => {
+          cat.items.forEach(item => {
+            const icon = String(item.icon || '').trim();
+            if (icon) used.push(icon);
+          });
+        });
+        const seed = [
+          'mdi:cart-outline','mdi:food','mdi:food-apple','mdi:fruit-cherries','mdi:fruit-citrus',
+          'mdi:carrot','mdi:leaf','mdi:sprout','mdi:potato','mdi:mushroom-outline','mdi:fish',
+          'mdi:bread-slice','mdi:cheese','mdi:cup','mdi:cup-water','mdi:bottle-tonic','mdi:pizza',
+          'mdi:rice','mdi:noodles','mdi:cookie-outline','mdi:ice-cream','mdi:peanut','mdi:nut',
+          'mdi:shaker','mdi:jar','mdi:cube-outline'
+        ];
+        const out = [];
+        const seen = new Set();
+        for (const v of [...used, ...seed]) {
+          if (!v || seen.has(v)) continue;
+          seen.add(v);
+          out.push(v);
+        }
+        return out;
+      }
+
+      function parseIconifyQuery(raw){
+        const q = String(raw || '').trim().toLowerCase();
+        if (!q) return { query: '', prefix: '' };
+        const idx = q.indexOf(':');
+        if (idx > 0 && idx < q.length - 1) return { prefix: q.slice(0, idx), query: q.slice(idx + 1).trim() };
+        return { query: q, prefix: '' };
+      }
+
+      async function searchIconifyRemote(rawQuery){
+        const parsed = parseIconifyQuery(rawQuery);
+        if (!parsed.query || parsed.query.length < 2) return [];
+        const key = parsed.prefix + '|' + parsed.query;
+        if (state.iconSearchCache.has(key)) return state.iconSearchCache.get(key);
+        try {
+          const url = new URL('https://api.iconify.design/search');
+          url.searchParams.set('query', parsed.query);
+          url.searchParams.set('limit', '300');
+          if (parsed.prefix) url.searchParams.set('prefix', parsed.prefix);
+          const res = await fetch(url.toString(), { cache: 'force-cache' });
+          if (!res.ok) return [];
+          const data = await res.json();
+          const icons = Array.isArray(data && data.icons) ? data.icons.filter(v => typeof v === 'string') : [];
+          state.iconSearchCache.set(key, icons);
+          return icons;
+        } catch (_) {
+          return [];
+        }
+      }
+
+      function ensureIconPool(){
+        if (Array.isArray(state.iconPool)) return state.iconPool;
+        state.iconPool = collectAllIconCandidates();
+        return state.iconPool;
+      }
+
+      function updatePickerCurrent(rawIcon){
+        const icon = String(rawIcon || '').trim() || 'mdi:cart-outline';
+        els.pickerCurrentName.textContent = icon;
+        els.pickerCurrentPreview.innerHTML = '<iconify-icon icon="' + icon + '"></iconify-icon>';
+      }
+
+      function renderIconOptions(list){
+        els.iconList.innerHTML = '';
+        list.slice(0, 1200).forEach(name => {
+          const btn = document.createElement('button');
+          btn.type = 'button';
+          btn.className = 'icon-opt';
+          btn.innerHTML = '<iconify-icon icon="' + name + '"></iconify-icon><span class="icon-name">' + name + '</span>';
+          btn.addEventListener('click', ()=>{
+            if (!state.iconInputTarget) return;
+            state.iconInputTarget.value = name;
+            state.iconInputTarget.dispatchEvent(new Event('input', { bubbles: true }));
+            updatePickerCurrent(name);
+            els.iconDlg.close();
+          });
+          els.iconList.appendChild(btn);
+        });
+      }
+
+      function iconLocalFilter(raw){
+        const q = String(raw || '').trim().toLowerCase();
+        const pool = ensureIconPool();
+        if (!q) return pool;
+        const starts = [];
+        const contains = [];
+        for (const name of pool){
+          const s = name.toLowerCase();
+          if (s.startsWith(q)) starts.push(name);
+          else if (s.includes(q)) contains.push(name);
+        }
+        return [...starts, ...contains];
+      }
+
+      function runIconSearch(){
+        const q = String(els.iconSearch.value || '');
+        updatePickerCurrent(q);
+
+        if (state.iconSearchTimer) {
+          clearTimeout(state.iconSearchTimer);
+          state.iconSearchTimer = null;
+        }
+
+        const localHits = iconLocalFilter(q);
+        renderIconOptions(localHits);
+
+        if (!q.trim()) {
+          els.iconState.textContent = 'Showing ' + Math.min(localHits.length, 1200) + ' local icons.';
+          return;
+        }
+
+        const token = ++state.iconSearchToken;
+        els.iconState.textContent = 'Searching Iconify...';
+        state.iconSearchTimer = setTimeout(async ()=>{
+          const remoteHits = await searchIconifyRemote(q);
+          if (token !== state.iconSearchToken) return;
+          const merged = [];
+          const seen = new Set();
+          for (const name of [...localHits, ...remoteHits]) {
+            if (!name || seen.has(name)) continue;
+            seen.add(name);
+            merged.push(name);
+          }
+          renderIconOptions(merged);
+          els.iconState.textContent = merged.length ? (merged.length + ' icons') : 'No icons found.';
+        }, 220);
+      }
+
+      function openIconPicker(targetInput){
+        state.iconInputTarget = targetInput;
+        state.iconPool = collectAllIconCandidates();
+        els.iconSearch.value = String(targetInput.value || '').trim();
+        updatePickerCurrent(els.iconSearch.value);
+        runIconSearch();
+        if (typeof els.iconDlg.showModal === 'function') els.iconDlg.showModal();
+      }
+
+      async function loadCatalog(){
+        setStatus(t('loading'));
+        const res = await fetch(CATALOG_URL + '?v=' + Date.now(), { cache: 'no-store' });
+        if (!res.ok) throw new Error('Load failed: HTTP ' + res.status);
+        const json = await res.json();
+        state.categories = normalizeCatalog(json);
+        state.iconPool = collectAllIconCandidates();
+        renderCatalog();
+        setStatus(t('loaded') + ' Categories: ' + state.categories.length);
+      }
+
+      async function saveCatalog(){
+        await loadCatalog();
+        setStatus(t('loaded') + ' Categories: ' + state.categories.length);
+      }
+
+      function bindUi(){
+        els.langSelect.addEventListener('change', ()=>{
+          state.lang = String(els.langSelect.value || 'de');
+          applyUiLabels();
+          renderCatalog();
+        });
+
+        els.addCategoryBtn.addEventListener('click', async ()=>{
+          if (state.saveInFlight) return;
+          state.saveInFlight = true;
+          try {
+            await addCategory();
+          } catch (err) {
+            setStatus(String(err && err.message ? err.message : err), true);
+          } finally {
+            state.saveInFlight = false;
+          }
+        });
+
+        els.reloadBtn.addEventListener('click', ()=>{
+          loadCatalog().catch(err => setStatus(String(err && err.message ? err.message : err), true));
+        });
+
+        els.saveBtn.addEventListener('click', async ()=>{
+          if (state.saveInFlight) return;
+          state.saveInFlight = true;
+          try {
+            await saveCatalog();
+          } catch (err) {
+            setStatus(String(err && err.message ? err.message : err), true);
+          } finally {
+            state.saveInFlight = false;
+          }
+        });
+
+        els.itemIcon.addEventListener('input', updateItemIconPreview);
+        els.itemIconPick.addEventListener('click', ()=> openIconPicker(els.itemIcon));
+
+        els.itemCancel.addEventListener('click', ()=> els.itemDlg.close());
+        els.itemDelete.addEventListener('click', async ()=>{
+          if (state.saveInFlight) return;
+          state.saveInFlight = true;
+          try {
+            await deleteItemFromDialog();
+          } catch (err) {
+            setStatus(String(err && err.message ? err.message : err), true);
+          } finally {
+            state.saveInFlight = false;
+          }
+        });
+        els.itemDlg.addEventListener('cancel', (e)=>{ e.preventDefault(); els.itemDlg.close(); });
+
+        els.itemForm.addEventListener('submit', (e)=>{
+          e.preventDefault();
+          if (state.saveInFlight) return;
+          state.saveInFlight = true;
+          saveItemFromDialog().catch(err => {
+            setStatus(String(err && err.message ? err.message : err), true);
+          }).finally(() => {
+            state.saveInFlight = false;
+          });
+        });
+
+        els.iconSearch.addEventListener('input', runIconSearch);
+        els.iconClose.addEventListener('click', ()=> els.iconDlg.close());
+        els.iconDlg.addEventListener('cancel', (e)=>{ e.preventDefault(); els.iconDlg.close(); });
+      }
+
+      state.lang = String(els.langSelect.value || 'de');
+      state.collapsedCategoryIds = loadCollapsedCategories();
+      applyUiLabels();
+      bindUi();
+      loadCatalog().catch(err => setStatus(String(err && err.message ? err.message : err), true));
+    })();
+  </script>
+</body>
+</html>

@@ -1,0 +1,131 @@
+shell_command:
+  taskboard_textcontentfile_save: >-
+    sh -c 'dir="{{ path }}";
+    file="$dir/{{ filename }}";
+    mkdir -p "$dir";
+    echo "{{ content_b64 }}" | base64 -d > "$file"'
+
+  taskboard_product_catalog_operation: >-
+    sh -c 'dir="$1";
+    script="$dir/scripts/product_catalog_ops.py";
+    [ -f "$script" ] || script="$dir/../scripts/product_catalog_ops.py";
+    python3 "$script" "$1" "$2" "$3" "$4"' --
+    "{{ path }}"
+    "{{ filename }}"
+    "{{ operation }}"
+    "{{ payload_b64 }}"
+
+  taskboard_task_operation: >-
+    sh -c 'dir="$1";
+    script="$dir/scripts/task_ops.py";
+    [ -f "$script" ] || script="$dir/../scripts/task_ops.py";
+    python3 "$script" "$1" "$2" "$3" "$4"' --
+    "{{ path }}"
+    "{{ filename }}"
+    "{{ operation }}"
+    "{{ payload_b64 }}"
+
+  taskboard_mark_done_task: >-
+    sh -c 'dir="$1";
+    script="$dir/scripts/task_ops.py";
+    [ -f "$script" ] || script="$dir/../scripts/task_ops.py";
+    payload="$(printf "{\"task_uuid\":\"%s\",\"assignee\":\"%s\"}" "$2" "$3" | base64 | tr -d "\n")";
+    python3 "$script" "$1" "$4" "mark_done" "$payload"' --
+    "{{ path }}"
+    "{{ task_uuid }}"
+    "{{ assignee }}"
+    "{{ filename }}"
+
+  taskboard_due_digest: >-
+    sh -c 'script="$(find /config/www -type f -path "*/scripts/taskboard_due_digest_script.py" | head -n1)";
+    [ -n "$script" ] && python3 "$script"'
+
+  taskboard_recalculate_due_days: >-
+    sh -c 'script="$(find /config/www -type f -path "*/scripts/task_ops.py" | head -n1)";
+    [ -n "$script" ] || exit 1;
+    base="$(dirname "$script")/..";
+    python3 "$script" "$base/userdata" "tasklist.js" "recalculate_due_days" "e30="'
+
+automation:
+  - alias: "Taskboard: Due Digest Webhook -> Device"
+    id: taskboard_due_digest_webhook_notify
+    mode: queued
+    trigger:
+      - platform: webhook
+        webhook_id: taskboard_due_digest
+        allowed_methods:
+          - POST
+        local_only: true
+    variables:
+      whatstodo: "{{ trigger.json.whatstodo | default('Keine Daten erhalten.') }}"
+      notify_service: "{{ trigger.json.notify_service | default('notify.notify') }}"
+    action:
+      - service: "{{ notify_service }}"
+        data:
+          title: "Taskboard today"
+          message: "Whats due:\n{{ whatstodo }}"
+          data:
+            fontsize: large
+            position: center
+            duration: 2
+            transparency: "0%"
+            color: amber
+            interrupt: 1
+
+  - alias: "Webhook: remey_taskboard_file_export"
+    id: taskboard_textcontentfile_export
+    mode: queued
+    trigger:
+      - platform: webhook
+        webhook_id: taskboard_textcontentfile_export
+    action:
+      - choose:
+          - conditions:
+              - condition: template
+                value_template: >-
+                  {{ trigger.json.operation is defined
+                     and trigger.json.operation in ['add_task','edit_task','delete_task','mark_done','get_task','get_tasklist','sort_tasklist'] }}
+            sequence:
+              - service: shell_command.taskboard_task_operation
+                data:
+                  path: "{{ trigger.json.savingpath }}"
+                  filename: "{{ trigger.json.filename }}"
+                  operation: "{{ trigger.json.operation }}"
+                  payload_b64: "{{ trigger.json.payload_b64 | default('') }}"
+
+          - conditions:
+              - condition: template
+                value_template: >-
+                  {{ trigger.json.operation is defined
+                     and trigger.json.operation in ['item_add','item_edit','item_delete','foodgoup_add','foodgoup_edit','foodgoup_delete','foodgroup_add','foodgroup_edit','foodgroup_delete'] }}
+            sequence:
+              - service: shell_command.taskboard_product_catalog_operation
+                data:
+                  path: "{{ trigger.json.savingpath }}"
+                  filename: "{{ trigger.json.filename }}"
+                  operation: "{{ trigger.json.operation }}"
+                  payload_b64: "{{ trigger.json.payload_b64 | default('') }}"
+        default:
+          - service: shell_command.taskboard_textcontentfile_save
+            data:
+              path: "{{ trigger.json.savingpath }}"
+              filename: "{{ trigger.json.filename }}"
+              content_b64: "{{ trigger.json.content_b64 }}"
+
+  - alias: "Taskboard: Daily Digest Trigger"
+    id: taskboard_daily_digest_trigger
+    mode: single
+    trigger:
+      - platform: time_pattern
+        minutes: "/1"
+    action:
+      - service: shell_command.taskboard_due_digest
+
+  - alias: "Taskboard: Daily Recalculate Due Days"
+    id: taskboard_daily_recalculate_due_days
+    mode: single
+    trigger:
+      - platform: time
+        at: "00:05:00"
+    action:
+      - service: shell_command.taskboard_recalculate_due_days

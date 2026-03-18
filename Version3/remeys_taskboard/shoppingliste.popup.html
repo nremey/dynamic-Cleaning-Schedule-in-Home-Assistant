@@ -1,0 +1,1756 @@
+<!doctype html>
+<html lang="de">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Shoppingliste</title>
+  <script src="https://code.iconify.design/iconify-icon/2.1.0/iconify-icon.min.js" defer></script>
+  <script src="ha_auth.js"></script>
+  <script src="usersettings/ha-todo-sync.config.js"></script>
+  <script src="usersettings/category-order.config.js"></script>
+  <style>
+    :root {
+      --bg: #edf3fb;
+      --card: #ffffff;
+      --text: #0f2138;
+      --muted: #57657c;
+      --border: #d5deeb;
+      --accent: #ffedd5;
+      --accent-border: #f59e0b;
+      --selected-panel-bg: #fff;
+      --radius: 14px;
+      --shadow: 0 10px 28px rgba(15, 33, 56, 0.08);
+    }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      color: var(--text);
+      font-family: "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+      background:
+        radial-gradient(circle at 5% 0%, #dbeafe 0%, transparent 35%),
+        radial-gradient(circle at 96% 14%, #fde68a 0%, transparent 28%),
+        linear-gradient(180deg, #f8fbff 0%, var(--bg) 100%);
+    }
+    .wrap {
+      width: 100%;
+      max-width: none;
+      margin: 0;
+      padding: 0;
+    }
+    .panel-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 0;
+      min-height: 100vh;
+      align-items: start;
+    }
+    .popup-x-close {
+      position: fixed;
+      top: 10px;
+      right: 10px;
+      z-index: 1000;
+      width: 32px;
+      height: 32px;
+      border-radius: 999px;
+      border: 1px solid rgba(15, 33, 56, 0.2);
+      background: rgba(255, 255, 255, 0.95);
+      color: #0f2138;
+      font-size: 22px;
+      line-height: 1;
+      padding: 0;
+      display: grid;
+      place-items: center;
+      box-shadow: 0 2px 8px rgba(15, 33, 56, 0.12);
+    }
+    .card {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 0;
+      box-shadow: var(--shadow);
+      padding: 14px;
+      display: grid;
+      gap: 10px;
+      min-height: 0;
+      align-content: start;
+    }
+    .panel-grid > .card:first-child {
+      background: #eaf6ff;
+    }
+    .panel-grid > .card:nth-child(2) {
+      background: #fffef9;
+    }
+    .panel-head {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 8px;
+      margin-bottom: 4px;
+    }
+    .panel-title { margin: 0; font-size: 16px; }
+    .panel-sub { margin: 0; color: var(--muted); font-size: 12px; }
+    .head-actions { display: flex; gap: 8px; align-items: center; }
+    .export-btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      white-space: nowrap;
+    }
+    .export-btn iconify-icon { font-size: 16px; }
+    .left-list {
+      border: 1px dashed var(--border);
+      border-radius: 12px;
+      padding: 10px;
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+      gap: 8px;
+      align-content: start;
+      min-height: 420px;
+      background: var(--selected-panel-bg);
+      overflow: auto;
+    }
+    .empty {
+      color: var(--muted);
+      font-size: 13px;
+      grid-column: 1 / -1;
+    }
+    .group-title {
+      margin-top: 4px;
+      margin-bottom: 2px;
+      padding: 4px 2px;
+      font-size: 12px;
+      font-weight: 700;
+      color: var(--muted);
+      text-transform: uppercase;
+      letter-spacing: 0.04em;
+      grid-column: 1 / -1;
+    }
+    .item-row {
+      display: grid;
+      gap: 8px;
+      padding: 8px 10px;
+      border: 1px solid var(--selected-item-border);
+      border-radius: 10px;
+      background: var(--selected-item-bg);
+    }
+    .item-main {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 8px;
+    }
+    .item-left {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      min-width: 0;
+    }
+    .item-left iconify-icon {
+      font-size: 20px;
+      color: #345;
+      flex: 0 0 auto;
+    }
+    .item-text {
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+      font-weight: 600;
+    }
+    button {
+      border: 1px solid var(--border);
+      background: #fff;
+      color: var(--text);
+      border-radius: 10px;
+      padding: 6px 10px;
+      font-weight: 600;
+      cursor: pointer;
+    }
+    .item-remove { font-size: 12px; padding: 4px 8px; }
+    .item-extra-input {
+      width: 100%;
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 7px 9px;
+      font-size: 13px;
+      background: #fff;
+      color: var(--text);
+      outline: none;
+    }
+    .item-extra-input:focus {
+      border-color: var(--accent-border);
+      box-shadow: 0 0 0 2px rgba(245, 158, 11, 0.18);
+    }
+    .acc-wrap {
+      border: 1px dashed var(--border);
+      border-radius: 12px;
+      padding: 10px;
+      background: #fff;
+      overflow: auto;
+      min-height: 420px;
+    }
+    .catalog-search {
+      width: 100%;
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 9px 10px;
+      font-size: 14px;
+      color: var(--text);
+      background: #fff;
+      outline: none;
+    }
+    .catalog-search:focus {
+      border-color: var(--accent-border);
+      box-shadow: 0 0 0 2px rgba(245, 158, 11, 0.2);
+    }
+    .custom-add-wrap {
+      display: none;
+      grid-template-columns: 1fr auto;
+      gap: 8px;
+      align-items: center;
+      padding: 8px;
+      border: 1px dashed var(--border);
+      border-radius: 10px;
+      background: #fffaf0;
+    }
+    .custom-add-wrap.show { display: grid; }
+    .custom-add-title {
+      grid-column: 1 / -1;
+      margin: 0;
+      font-size: 12px;
+      color: var(--muted);
+      font-weight: 700;
+      letter-spacing: 0.02em;
+    }
+    .custom-add-input {
+      width: 100%;
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 9px 10px;
+      font-size: 14px;
+      color: var(--text);
+      background: #fff;
+      outline: none;
+    }
+    .custom-add-input:focus {
+      border-color: var(--accent-border);
+      box-shadow: 0 0 0 2px rgba(245, 158, 11, 0.18);
+    }
+    .custom-add-btn { white-space: nowrap; }
+    details {
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      background: #fff;
+      margin-bottom: 8px;
+      overflow: hidden;
+    }
+    summary {
+      cursor: pointer;
+      list-style: none;
+      padding: 10px;
+      font-weight: 700;
+      font-size: 13px;
+      border-bottom: 1px solid transparent;
+    }
+    details[open] summary {
+      border-bottom-color: var(--border);
+      background: #f7fbff;
+    }
+    .product-grid {
+      padding: 10px;
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
+      gap: 8px;
+    }
+    .product-btn {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      border-radius: 10px;
+      border: 1px solid var(--border);
+      background: var(--catalog-item-bg);
+      padding: 8px;
+      text-align: left;
+      min-height: 46px;
+      transition: background .15s, border-color .15s;
+    }
+    .product-btn iconify-icon {
+      font-size: 22px;
+      color: #334e68;
+      flex: 0 0 auto;
+    }
+    .product-btn .txt {
+      font-size: 13px;
+      font-weight: 600;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+    .product-btn.active {
+      background: var(--accent);
+      border-color: var(--accent-border);
+    }
+    .product-btn.active iconify-icon { color: #b45309; }
+    @media (max-width: 980px) {
+      .panel-grid { grid-template-columns: 1fr; }
+      .left-list, .acc-wrap { min-height: 300px; }
+    }
+  </style>
+</head>
+<body>
+  <button id="popup-x-close" class="popup-x-close" type="button" aria-label="Schließen">&times;</button>
+  <main class="wrap">
+    <div class="panel-grid">
+      <section class="card">
+        <div class="panel-head">
+          <div>
+            <h2 class="panel-title" id="selected-title">Ausgewählte Einträge</h2>
+            <p class="panel-sub" id="selected-count">0 Einträge</p>
+          </div>
+          <button id="clear-list-btn" type="button">Leeren</button>
+        </div>
+        <div id="left-list" class="left-list"></div>
+      </section>
+
+      <section class="card">
+        <div class="panel-head">
+          <div>
+            <h2 class="panel-title" id="catalog-title">Produktauswahl</h2>
+            <p class="panel-sub" id="catalog-sub">Klick auf Produkt toggelt Eintrag links.</p>
+          </div>
+          <div class="head-actions">
+            <button id="export-print-btn" class="export-btn" type="button">
+              <iconify-icon icon="mdi:printer-outline"></iconify-icon>
+              <span id="export-print-label">Druck</span>
+            </button>
+            <button id="export-pdf-btn" class="export-btn" type="button">
+              <iconify-icon icon="mdi:file-pdf-box"></iconify-icon>
+              <span id="export-pdf-label">PDF</span>
+            </button>
+            <button id="lang-toggle" type="button">DE</button>
+          </div>
+        </div>
+        <input id="catalog-search" class="catalog-search" type="search" placeholder="Produkte suchen..." />
+        <div id="custom-add-wrap" class="custom-add-wrap">
+          <p id="custom-add-title" class="custom-add-title">Nicht gefunden?</p>
+          <input id="custom-add-input" class="custom-add-input" type="text" placeholder="Neuen Eintrag hinzufügen..." />
+          <button id="custom-add-btn" class="custom-add-btn" type="button">Hinzufügen</button>
+        </div>
+        <div id="accordion" class="acc-wrap"></div>
+      </section>
+    </div>
+  </main>
+
+  <script>
+    (function () {
+      const LIST_FILE_URL = './userdata/ontheshoppinglist.js';
+      const LIST_FILE_NAME = 'ontheshoppinglist.js';
+      const LIST_DIR_NAME = 'userdata';
+      const CATALOG_JSON_PATH = './integrations/product-catalog.json';
+      const TODO_SEPARATOR_DEFAULT = ' - ';
+
+      const TEXTS = {
+        de: {
+          selectedTitle: 'Ausgewählte Einträge',
+          selectedOne: 'Eintrag',
+          selectedMany: 'Einträge',
+          clear: 'Leeren',
+          catalogTitle: 'Produktauswahl',
+          catalogSub: 'Klick auf Produkt toggelt Eintrag links.',
+          searchPlaceholder: 'Produkte suchen...',
+          customAddTitle: 'Nicht gefunden? Eigenen Eintrag hinzufügen',
+          customAddPlaceholder: 'Neuen Eintrag eingeben...',
+          customAddButton: 'Hinzufügen',
+          itemExtraPlaceholder: 'Menge oder Bemerkung...',
+          exportPrint: 'Druck',
+          exportPdf: 'PDF',
+          exportEmpty: 'Keine ausgewählten Einträge zum Export.',
+          exportTitle: 'Einkaufsliste',
+          exportHintPdf: 'Im Druckdialog als PDF speichern wählen.',
+          exportItem: 'Artikel',
+          exportRemark: 'Bemerkung',
+          exportCreated: 'Erstellt',
+          remove: 'X',
+          empty: 'Noch keine Einträge ausgewählt.',
+          fallbackCategory: 'Sonstiges'
+        },
+        en: {
+          selectedTitle: 'Selected Items',
+          selectedOne: 'item',
+          selectedMany: 'items',
+          clear: 'Clear',
+          catalogTitle: 'Product Catalog',
+          catalogSub: 'Click product to toggle item on the left.',
+          searchPlaceholder: 'Search products...',
+          customAddTitle: 'Not found? Add your own item',
+          customAddPlaceholder: 'Enter a new item...',
+          customAddButton: 'Add',
+          itemExtraPlaceholder: 'Amount or note...',
+          exportPrint: 'Print',
+          exportPdf: 'PDF',
+          exportEmpty: 'No selected items to export.',
+          exportTitle: 'Shopping List',
+          exportHintPdf: 'In the print dialog, choose Save as PDF.',
+          exportItem: 'Item',
+          exportRemark: 'Remark',
+          exportCreated: 'Created',
+          remove: 'X',
+          empty: 'No items selected yet.',
+          fallbackCategory: 'Misc'
+        },
+        ja: {
+          selectedTitle: '選択済みアイテム',
+          selectedOne: '件',
+          selectedMany: '件',
+          clear: 'クリア',
+          catalogTitle: '商品カタログ',
+          catalogSub: '商品をクリックすると左側で切り替わります。',
+          searchPlaceholder: '商品を検索...',
+          customAddTitle: '見つからない場合は項目を追加',
+          customAddPlaceholder: '新しい項目を入力...',
+          customAddButton: '追加',
+          itemExtraPlaceholder: '数量・メモ...',
+          exportPrint: '印刷',
+          exportPdf: 'PDF',
+          exportEmpty: 'エクスポートする選択済み項目がありません。',
+          exportTitle: '買い物リスト',
+          exportHintPdf: '印刷ダイアログで「PDFとして保存」を選択してください。',
+          exportItem: '商品',
+          exportRemark: 'メモ',
+          exportCreated: '作成日時',
+          remove: 'X',
+          empty: 'まだ項目が選択されていません。',
+          fallbackCategory: 'その他'
+        }
+      };
+
+      const accordion = document.getElementById('accordion');
+      const leftList = document.getElementById('left-list');
+      const selectedCount = document.getElementById('selected-count');
+      const clearListBtn = document.getElementById('clear-list-btn');
+      const langToggleBtn = document.getElementById('lang-toggle');
+      const popupCloseBtn = document.getElementById('popup-x-close');
+      const selectedTitleEl = document.getElementById('selected-title');
+      const catalogTitleEl = document.getElementById('catalog-title');
+      const catalogSubEl = document.getElementById('catalog-sub');
+      const catalogSearchInput = document.getElementById('catalog-search');
+      const customAddWrap = document.getElementById('custom-add-wrap');
+      const customAddTitle = document.getElementById('custom-add-title');
+      const customAddInput = document.getElementById('custom-add-input');
+      const customAddBtn = document.getElementById('custom-add-btn');
+      const exportPrintBtn = document.getElementById('export-print-btn');
+      const exportPdfBtn = document.getElementById('export-pdf-btn');
+      const exportPrintLabel = document.getElementById('export-print-label');
+      const exportPdfLabel = document.getElementById('export-pdf-label');
+
+      const selectedMap = new Map();
+      let catalogGroups = [];
+      const categoryOrder = new Map();
+      const itemIndex = new Map();
+      const categoryIndex = new Map();
+      const itemExtraSaveTimers = new Map();
+      let uiLang = 'de';
+      const LANG_ORDER = ['de', 'en', 'ja'];
+      const LOCAL_LANG_KEY = 'shoppinglist-popup-lang';
+
+      function isHostedByTaskboard() {
+        try {
+          const p = getParentWindow();
+          if (!p || !p.document) return false;
+          const hasLangSelect = !!p.document.getElementById('lang-select');
+          const hasShoppingDialog = !!p.document.getElementById('shopping-list-dialog');
+          return hasLangSelect && hasShoppingDialog;
+        } catch (_) {}
+        return false;
+      }
+
+      const HOSTED_BY_TASKBOARD = isHostedByTaskboard();
+
+      function getMainLangFromParent() {
+        if (!HOSTED_BY_TASKBOARD) return null;
+        try {
+          const p = getParentWindow();
+          const sel = p && p.document ? p.document.getElementById('lang-select') : null;
+          const v = String(sel && sel.value ? sel.value : '').toLowerCase();
+          if (v === 'de' || v === 'en' || v === 'ja') return v;
+        } catch (_) {}
+        return null;
+      }
+
+      function detectLang() {
+        const fromMain = getMainLangFromParent();
+        if (fromMain) return fromMain;
+        try {
+          const own = localStorage.getItem(LOCAL_LANG_KEY);
+          if (own === 'de' || own === 'en' || own === 'ja') return own;
+        } catch (_) {}
+        try {
+          const p = getParentWindow();
+          const fromStorage = p && p.localStorage ? p.localStorage.getItem('pp-lang') : null;
+          if (fromStorage === 'de' || fromStorage === 'en' || fromStorage === 'ja') return fromStorage;
+        } catch (_) {}
+        const nav = String(navigator.language || 'de').toLowerCase();
+        if (nav.startsWith('ja')) return 'ja';
+        return nav.startsWith('en') ? 'en' : 'de';
+      }
+
+      function syncLangFromMain(options = {}) {
+        if (!HOSTED_BY_TASKBOARD) return;
+        const next = getMainLangFromParent();
+        if (!next || (next !== 'de' && next !== 'en' && next !== 'ja')) return;
+        const changed = next !== uiLang;
+        if (!changed) return;
+        uiLang = next;
+        applyUiLanguage();
+        if (options.rerender !== false) {
+          renderCatalogFromSearch();
+          renderLeftList();
+        }
+      }
+
+      function bindMainLangSync() {
+        if (!HOSTED_BY_TASKBOARD) return;
+        try {
+          const p = getParentWindow();
+          const sel = p && p.document ? p.document.getElementById('lang-select') : null;
+          if (sel && sel.addEventListener) {
+            sel.addEventListener('change', () => syncLangFromMain({ rerender: true }));
+          }
+        } catch (_) {}
+        window.addEventListener('focus', () => syncLangFromMain({ rerender: true }));
+      }
+
+      function t(key) {
+        return (TEXTS[uiLang] && TEXTS[uiLang][key]) || key;
+      }
+
+      function getCategoryOrderRank(categoryId) {
+        const config = (window.CATEGORY_ORDER_CONFIG && typeof window.CATEGORY_ORDER_CONFIG === 'object')
+          ? window.CATEGORY_ORDER_CONFIG
+          : {};
+        const order = Array.isArray(config.order) ? config.order : [];
+        const id = String(categoryId || '').trim();
+        const idx = order.indexOf(id);
+        return idx >= 0 ? idx : Number.MAX_SAFE_INTEGER;
+      }
+
+      function sortCatalogCategories(groups) {
+        const list = Array.isArray(groups) ? groups.slice() : [];
+        list.sort((a, b) => {
+          const aId = String(a && a.id || '');
+          const bId = String(b && b.id || '');
+          const rA = getCategoryOrderRank(aId);
+          const rB = getCategoryOrderRank(bId);
+          if (rA !== rB) return rA - rB;
+          return aId.localeCompare(bId);
+        });
+        return list;
+      }
+
+      function resolveLangValue(v) {
+        if (typeof v === 'string') return v;
+        if (!v || typeof v !== 'object') return '';
+        return String(v[uiLang] || v.de || v.en || '').trim();
+      }
+
+      function normalizeKey(v) {
+        return String(v || '')
+          .trim()
+          .toLowerCase()
+          .normalize('NFKD')
+          .replace(/[\u0300-\u036f]/g, '')
+          .replace(/[^a-z0-9]+/g, '-')
+          .replace(/(^-|-$)/g, '');
+      }
+
+      function normalizeSearch(v) {
+        return String(v || '')
+          .trim()
+          .toLowerCase()
+          .normalize('NFKD')
+          .replace(/[\u0300-\u036f]/g, '')
+          .replace(/[^a-z0-9]+/g, ' ');
+      }
+
+      function singularizeSearchWord(word) {
+        const w = String(word || '');
+        if (w.length <= 3) return w;
+        if (w.endsWith('innen') && w.length > 6) return w.slice(0, -3);
+        if (w.endsWith('en') && w.length > 4) return w.slice(0, -2);
+        if (w.endsWith('e') && w.length > 3) return w.slice(0, -1);
+        if (w.endsWith('n') && w.length > 4) return w.slice(0, -1);
+        if (w.endsWith('s') && w.length > 4) return w.slice(0, -1);
+        return w;
+      }
+
+      function normalizeFoodSearch(v) {
+        const colors = new Set([
+          'rot', 'rote', 'roter', 'rotes', 'roten',
+          'grun', 'gruen', 'grune', 'gruene', 'gruner', 'gruener', 'grunes', 'gruenes', 'grunen', 'gruenen',
+          'gelb', 'gelbe', 'gelber', 'gelbes', 'gelben',
+          'weiss', 'weise', 'weiser', 'weisses', 'weisen',
+          'schwarz', 'schwarze', 'schwarzer', 'schwarzes', 'schwarzen',
+          'braun', 'braune', 'brauner', 'braunes', 'braunen',
+          'orange', 'orangene', 'oranger', 'orangen', 'orangenes',
+          'lila', 'violett', 'bunt', 'bunte', 'bunter', 'bunten'
+        ]);
+        const stopPrefixes = new Set(['frisch', 'frischer', 'frische', 'frisches', 'frischen']);
+        const parts = normalizeSearch(v).split(' ').filter(Boolean);
+        while (parts.length && (colors.has(parts[0]) || stopPrefixes.has(parts[0]))) {
+          parts.shift();
+        }
+        if (!parts.length) return '';
+        parts[parts.length - 1] = singularizeSearchWord(parts[parts.length - 1]);
+        return parts.join(' ');
+      }
+
+      function collectItemSearchTerms(item) {
+        if (!item) return [];
+        const aliases = (item.aliases && typeof item.aliases === 'object') ? item.aliases : {};
+        const deAliases = Array.isArray(aliases.de) ? aliases.de : [];
+        const enAliases = Array.isArray(aliases.en) ? aliases.en : [];
+        const jaAliases = Array.isArray(aliases.ja) ? aliases.ja : [];
+        return [
+          resolveLangValue(item.label),
+          item.label && item.label.de,
+          item.label && item.label.en,
+          item.label && item.label.ja,
+          item.id,
+          ...deAliases,
+          ...enAliases,
+          ...jaAliases
+        ];
+      }
+
+      function escapeHtml(v) {
+        return String(v || '')
+          .replaceAll('&', '&amp;')
+          .replaceAll('<', '&lt;')
+          .replaceAll('>', '&gt;')
+          .replaceAll('"', '&quot;')
+          .replaceAll("'", '&#39;');
+      }
+
+      function toBase64(text) {
+        return btoa(unescape(encodeURIComponent(text)));
+      }
+
+      function getParentWindow() {
+        try {
+          if (window.parent && window.parent !== window) return window.parent;
+        } catch (_) {}
+        return null;
+      }
+
+      function getHaOrigin() {
+        try {
+          if (window.top && window.top.location && /^https?:/.test(window.top.location.origin)) {
+            return window.top.location.origin;
+          }
+        } catch (_) {}
+        if (typeof window.HA_ORIGIN === 'string' && /^https?:/.test(window.HA_ORIGIN)) {
+          return window.HA_ORIGIN;
+        }
+        if (typeof window.location.origin === 'string' && /^https?:/.test(window.location.origin)) {
+          return window.location.origin;
+        }
+        return '';
+      }
+
+      function detectSaveBaseDirFromLocation() {
+        const pathname = String(window.location.pathname || '').trim();
+        if (!pathname) return '';
+        let dir = pathname;
+        if (!dir.endsWith('/')) {
+          const idx = dir.lastIndexOf('/');
+          dir = idx >= 0 ? dir.slice(0, idx + 1) : '/';
+        }
+        dir = dir.replace(/\/+$/, '');
+        if (!dir) return '';
+        if (dir.startsWith('/local/')) return '/config/www/' + dir.slice('/local/'.length);
+        if (dir.startsWith('/www/')) return '/config/www/' + dir.slice('/www/'.length);
+        return '/config/www' + dir;
+      }
+
+      function resolveSaveDir() {
+        const p = getParentWindow();
+        const parentBaseDir = p && typeof p.PP_FILE_SAVE_DIR === 'string' ? p.PP_FILE_SAVE_DIR.trim() : '';
+        if (parentBaseDir) {
+          return parentBaseDir.replace(/\/+$/, '') + '/' + LIST_DIR_NAME;
+        }
+        const locationBaseDir = detectSaveBaseDirFromLocation();
+        if (!locationBaseDir) return '';
+        if (/\/integrations\/to shop$/i.test(locationBaseDir)) return locationBaseDir;
+        if (/\/integrations$/i.test(locationBaseDir)) return locationBaseDir + '/to shop';
+        return locationBaseDir.replace(/\/+$/, '') + '/' + LIST_DIR_NAME;
+      }
+
+      async function callWebhookDirect(payload) {
+        const origin = getHaOrigin();
+        if (!origin) throw new Error('Missing Home Assistant origin for webhook call.');
+        const webhookUrl = origin.replace(/\/+$/, '') + '/api/webhook/taskboard_textcontentfile_export';
+        const res = await fetch(webhookUrl, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(payload)
+        });
+        const text = await res.text();
+        if (!res.ok) throw new Error('Webhook ' + res.status + ' - ' + text);
+        return text || 'OK';
+      }
+
+      function resolveWebhookCaller() {
+        const p = getParentWindow();
+        if (p && typeof p.callWebhook === 'function') return p.callWebhook.bind(p);
+        return callWebhookDirect;
+      }
+
+      function getHaTokenFromStorage() {
+        try {
+          const raw = localStorage.getItem('hassTokens');
+          if (!raw) return '';
+          const parsed = JSON.parse(raw);
+          return String(
+            parsed?.access_token ||
+            parsed?.accessToken ||
+            parsed?.token ||
+            ''
+          ).trim();
+        } catch (_) {
+          return '';
+        }
+      }
+
+      function getHaAccessToken() {
+        const p = getParentWindow();
+        const localCfg = (window.PP_HA_AUTH && typeof window.PP_HA_AUTH === 'object') ? window.PP_HA_AUTH : {};
+        const parentCfg = (p?.PP_HA_AUTH && typeof p.PP_HA_AUTH === 'object') ? p.PP_HA_AUTH : {};
+        const candidates = [
+          window?.hass?.auth?.data?.access_token,
+          window?.hass?.auth?.accessToken,
+          p?.hass?.auth?.data?.access_token,
+          p?.hass?.auth?.accessToken,
+          window?.hassConnection?.options?.auth?.accessToken,
+          p?.hassConnection?.options?.auth?.accessToken,
+          localCfg.longLivedBearerToken,
+          localCfg.longLivedToken,
+          localCfg.bearerToken,
+          localCfg.token,
+          parentCfg.longLivedBearerToken,
+          parentCfg.longLivedToken,
+          parentCfg.bearerToken,
+          parentCfg.token,
+          getHaTokenFromStorage()
+        ];
+        for (const token of candidates) {
+          const v = String(token || '').trim();
+          if (v) return v;
+        }
+        return '';
+      }
+
+      async function callHaService(domain, service, data) {
+        const d = String(domain || '').trim();
+        const s = String(service || '').trim();
+        if (!d || !s) throw new Error('Missing service target.');
+        const payload = (data && typeof data === 'object') ? data : {};
+
+        const p = getParentWindow();
+        try {
+          if (p && typeof p.callService === 'function') {
+            await p.callService(d, s, payload);
+            return;
+          }
+        } catch (_) {}
+        try {
+          if (p && p.hass && typeof p.hass.callService === 'function') {
+            await p.hass.callService(d, s, payload);
+            return;
+          }
+        } catch (_) {}
+        try {
+          if (window.hass && typeof window.hass.callService === 'function') {
+            await window.hass.callService(d, s, payload);
+            return;
+          }
+        } catch (_) {}
+
+        const origin = getHaOrigin();
+        const token = getHaAccessToken();
+        if (!origin || !token) {
+          throw new Error('HA service call requires origin + access token.');
+        }
+        const url = origin.replace(/\/+$/, '') + '/api/services/' + encodeURIComponent(d) + '/' + encodeURIComponent(s);
+        const res = await fetch(url, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': 'Bearer ' + token
+          },
+          body: JSON.stringify(payload)
+        });
+        const text = await res.text();
+        if (!res.ok) throw new Error('Service ' + d + '.' + s + ' failed: ' + res.status + ' - ' + text);
+      }
+
+      function getTodoSyncConfig() {
+        const p = getParentWindow();
+        const fromParentDirect = p && typeof p.shoppinglist_entity === 'string' ? p.shoppinglist_entity : '';
+        const fromWindowDirect = typeof shoppinglist_entity === 'string' ? shoppinglist_entity : '';
+        const fromParentLegacy = p && p.PP_HA_TODO_SYNC && typeof p.PP_HA_TODO_SYNC === 'object'
+          ? String(p.PP_HA_TODO_SYNC.shoppinglist_entity || p.PP_HA_TODO_SYNC.shoppinglistEntity || '')
+          : '';
+        const fromWindowLegacy = window.PP_HA_TODO_SYNC && typeof window.PP_HA_TODO_SYNC === 'object'
+          ? String(window.PP_HA_TODO_SYNC.shoppinglist_entity || window.PP_HA_TODO_SYNC.shoppinglistEntity || '')
+          : '';
+        const entityId = String(
+          fromParentDirect ||
+          fromWindowDirect ||
+          fromParentLegacy ||
+          fromWindowLegacy ||
+          'todo.einkaufsliste_bring'
+        ).trim();
+        const separator = TODO_SEPARATOR_DEFAULT;
+        return { entityId, separator };
+      }
+
+      function splitTodoItemText(text) {
+        const raw = String(text || '').trim();
+        if (!raw) return { label: '', extra: '' };
+        const { separator } = getTodoSyncConfig();
+        const idx = raw.indexOf(separator);
+        if (idx < 0) return { label: raw, extra: '' };
+        const label = raw.slice(0, idx).trim();
+        const extra = raw.slice(idx + separator.length).trim();
+        return { label, extra };
+      }
+
+      function getHaShoppingName(entryKey, entryValue) {
+        const todoItem = String(entryValue && entryValue.todoItem || '').trim();
+        if (todoItem) return todoItem;
+        const fromEntry = String(entryValue && entryValue.haName || '').trim();
+        if (fromEntry) return fromEntry;
+        const localized = String(getLocalizedItemLabel(entryKey, entryValue) || '').trim();
+        if (localized) return localized;
+        const catalogItem = getCatalogItemByKey(entryKey);
+        const fromCatalog = String(resolveLangValue(catalogItem && catalogItem.label) || '').trim();
+        if (fromCatalog) return fromCatalog;
+        return String(entryKey || '').trim();
+      }
+
+      async function addToHaShoppingList(name) {
+        const n = String(name || '').trim();
+        if (!n) return;
+        const { entityId } = getTodoSyncConfig();
+        await callHaService('todo', 'add_item', { entity_id: entityId, item: n });
+      }
+
+      async function removeFromHaShoppingList(name) {
+        const n = String(name || '').trim();
+        if (!n) return;
+        const { entityId } = getTodoSyncConfig();
+        await callHaService('todo', 'remove_item', { entity_id: entityId, item: n });
+      }
+
+      function buildTodoItemText(entryKey, entryValue) {
+        const baseLabel = String(
+          (entryValue && entryValue.haName) ||
+          getLocalizedItemLabel(entryKey, entryValue) ||
+          entryKey ||
+          ''
+        ).trim();
+        const extra = String(entryValue && entryValue.extra || '').trim();
+        if (!extra) return baseLabel;
+        const { separator } = getTodoSyncConfig();
+        return baseLabel + separator + extra;
+      }
+
+      function findCatalogItemByAnyLabel(rawLabel) {
+        const needle = normalizeSearch(rawLabel);
+        const foodNeedle = normalizeFoodSearch(rawLabel);
+        if (!needle) return null;
+        for (const [id, item] of itemIndex.entries()) {
+          const terms = collectItemSearchTerms(item);
+          for (const term of terms) {
+            const normalized = normalizeSearch(term);
+            const foodNormalized = normalizeFoodSearch(term);
+            if (
+              (needle && needle === normalized) ||
+              (foodNeedle && foodNeedle === foodNormalized)
+            ) {
+              return { id, item };
+            }
+          }
+        }
+        return null;
+      }
+
+      function uniqueEntryKey(baseKey, used) {
+        let key = normalizeKey(baseKey) || 'item';
+        if (!used.has(key)) return key;
+        let i = 2;
+        while (used.has(key + '-' + i)) i += 1;
+        return key + '-' + i;
+      }
+
+      function syncSelectedMapFromHaTodoItems(todoTexts) {
+        const normalizedTodoTexts = uniqueNonEmptyStrings(todoTexts);
+        const todoSet = new Set(normalizedTodoTexts);
+        const next = new Map();
+        const usedKeys = new Set();
+        const matchedTodoTexts = new Set();
+
+        // 1) Keep only intersection: local items that are also in todo.get_items.
+        for (const [key, value] of selectedMap.entries()) {
+          const localTodo = String(value && value.todoItem || '').trim() || buildTodoItemText(key, value);
+          if (!localTodo || !todoSet.has(localTodo)) continue;
+          if (usedKeys.has(key)) continue;
+          next.set(key, { ...value, todoItem: localTodo });
+          usedKeys.add(key);
+          matchedTodoTexts.add(localTodo);
+        }
+
+        // 2) Add items that exist only in todo.get_items.
+        for (const todoText of normalizedTodoTexts) {
+          if (matchedTodoTexts.has(todoText)) continue;
+
+          const parts = splitTodoItemText(todoText);
+          const match = findCatalogItemByAnyLabel(parts.label);
+          if (match && !usedKeys.has(match.id)) {
+            next.set(match.id, {
+              icon: String((match.item && match.item.icon) || ''),
+              categoryId: String((match.item && match.item.categoryId) || ''),
+              label: (match.item && match.item.label) || parts.label,
+              haName: String(parts.label || resolveLangValue(match.item && match.item.label) || match.id).trim(),
+              todoItem: todoText,
+              extra: String(parts.extra || '')
+            });
+            usedKeys.add(match.id);
+            continue;
+          }
+
+          const fallbackKey = uniqueEntryKey(parts.label || todoText, usedKeys);
+          next.set(fallbackKey, {
+            icon: 'mdi:cart-outline',
+            categoryId: '',
+            label: parts.label || todoText,
+            haName: String(parts.label || todoText).trim(),
+            todoItem: todoText,
+            extra: String(parts.extra || '')
+          });
+          usedKeys.add(fallbackKey);
+        }
+
+        // 3) Replace local state: anything not in todo.get_items is removed.
+        selectedMap.clear();
+        for (const [k, v] of next.entries()) selectedMap.set(k, v);
+      }
+
+      function extractTodoItemsRecursive(node, out) {
+        if (Array.isArray(node)) {
+          node.forEach(v => extractTodoItemsRecursive(v, out));
+          return;
+        }
+        if (!node || typeof node !== 'object') return;
+        if (Array.isArray(node.items)) {
+          node.items.forEach(it => {
+            const txt = String((it && (it.summary || it.item || it.name)) || '').trim();
+            if (txt) out.push(txt);
+          });
+        }
+        Object.values(node).forEach(v => extractTodoItemsRecursive(v, out));
+      }
+
+      function pushTodoItemTextsFromItems(items, out) {
+        if (!Array.isArray(items)) return;
+        items.forEach(it => {
+          const txt = String((it && (it.summary || it.item || it.name)) || '').trim();
+          if (txt) out.push(txt);
+        });
+      }
+
+      function collectTodoItemsForEntity(node, entityId, out) {
+        if (Array.isArray(node)) {
+          let found = false;
+          node.forEach(v => {
+            if (collectTodoItemsForEntity(v, entityId, out)) found = true;
+          });
+          return found;
+        }
+        if (!node || typeof node !== 'object') return false;
+
+        let found = false;
+        const ownEntity = String(node.entity_id || node.entityId || '').trim();
+        if (ownEntity && ownEntity === entityId && Array.isArray(node.items)) {
+          pushTodoItemTextsFromItems(node.items, out);
+          found = true;
+        }
+
+        if (Object.prototype.hasOwnProperty.call(node, entityId)) {
+          const byKey = node[entityId];
+          if (byKey && typeof byKey === 'object' && Array.isArray(byKey.items)) {
+            pushTodoItemTextsFromItems(byKey.items, out);
+            found = true;
+          }
+        }
+
+        Object.values(node).forEach(v => {
+          if (collectTodoItemsForEntity(v, entityId, out)) found = true;
+        });
+        return found;
+      }
+
+      function uniqueNonEmptyStrings(values) {
+        const out = [];
+        const seen = new Set();
+        (values || []).forEach(v => {
+          const s = String(v || '').trim();
+          if (!s || seen.has(s)) return;
+          seen.add(s);
+          out.push(s);
+        });
+        return out;
+      }
+
+      function extractTodoTextsFromEntityNode(node, out) {
+        if (!node || typeof node !== 'object') return false;
+        if (!Array.isArray(node.items)) return false;
+        pushTodoItemTextsFromItems(node.items, out);
+        return true;
+      }
+
+      function extractTodoTextsForEntityFromResponseShape(json, entityId) {
+        const out = [];
+        let found = false;
+        const candidates = [];
+
+        if (json && typeof json === 'object') {
+          candidates.push(json);
+          if (json.response && typeof json.response === 'object') candidates.push(json.response);
+          if (json.service_response && typeof json.service_response === 'object') candidates.push(json.service_response);
+          if (json.result && typeof json.result === 'object') candidates.push(json.result);
+          if (json.result && json.result.response && typeof json.result.response === 'object') candidates.push(json.result.response);
+        }
+
+        if (Array.isArray(json)) {
+          json.forEach(entry => {
+            if (entry && typeof entry === 'object') {
+              candidates.push(entry);
+              if (entry.response && typeof entry.response === 'object') candidates.push(entry.response);
+              if (entry.service_response && typeof entry.service_response === 'object') candidates.push(entry.service_response);
+              if (entry.result && typeof entry.result === 'object') candidates.push(entry.result);
+              if (entry.result && entry.result.response && typeof entry.result.response === 'object') candidates.push(entry.result.response);
+            }
+          });
+        }
+
+        candidates.forEach(obj => {
+          if (!obj || typeof obj !== 'object') return;
+          if (Object.prototype.hasOwnProperty.call(obj, entityId)) {
+            if (extractTodoTextsFromEntityNode(obj[entityId], out)) found = true;
+          }
+          const ownEntity = String(obj.entity_id || obj.entityId || '').trim();
+          if (ownEntity === entityId) {
+            if (extractTodoTextsFromEntityNode(obj, out)) found = true;
+          }
+        });
+
+        return { found, items: uniqueNonEmptyStrings(out) };
+      }
+
+      async function fetchTodoItemsFromHa() {
+        const { entityId } = getTodoSyncConfig();
+        if (!entityId) {
+          return { ok: false, items: [] };
+        }
+
+        let json = null;
+        let lastErr = null;
+
+        // Preferred path inside HA frontend context (handles auth/session automatically).
+        try {
+          const p = getParentWindow();
+          const parentHass = p && p.hass && typeof p.hass.callApi === 'function' ? p.hass : null;
+          const ownHass = window.hass && typeof window.hass.callApi === 'function' ? window.hass : null;
+          const hassApi = parentHass || ownHass;
+          if (hassApi) {
+            json = await hassApi.callApi('POST', 'services/todo/get_items?return_response', {
+              entity_id: entityId,
+              status: ['needs_action']
+            });
+          }
+        } catch (err) {
+          lastErr = err;
+          json = null;
+        }
+
+        // Fallback path via REST + bearer token.
+        if (!json) {
+          try {
+            const origin = getHaOrigin();
+            const token = getHaAccessToken();
+            if (!origin || !token) {
+              return { ok: false, items: [] };
+            }
+            const url = origin.replace(/\/+$/, '') + '/api/services/todo/get_items?return_response';
+            const res = await fetch(url, {
+              method: 'POST',
+              headers: {
+                'Content-Type': 'application/json',
+                'Authorization': 'Bearer ' + token
+              },
+              body: JSON.stringify({
+                entity_id: entityId,
+                status: ['needs_action']
+              })
+            });
+            const text = await res.text();
+            if (!res.ok) throw new Error('todo.get_items failed: ' + res.status + ' - ' + text);
+            try { json = text ? JSON.parse(text) : null; } catch (_) { json = null; }
+          } catch (err) {
+            lastErr = err;
+            json = null;
+          }
+        }
+
+        if (!json || typeof json !== 'object') {
+          if (lastErr) console.warn('todo.get_items fetch failed', lastErr);
+          return { ok: false, items: [] };
+        }
+
+        const explicit = extractTodoTextsForEntityFromResponseShape(json, entityId);
+        if (explicit.found) {
+          return { ok: true, items: explicit.items };
+        }
+
+        const byEntity = [];
+        const foundEntityRecursive = collectTodoItemsForEntity(json, entityId, byEntity);
+        if (foundEntityRecursive) {
+          return { ok: true, items: uniqueNonEmptyStrings(byEntity) };
+        }
+
+        // No recognizable payload for the configured entity => skip reconcile.
+        return { ok: false, items: [] };
+      }
+
+      async function reconcileFromHaTodoList() {
+        try {
+          const result = await fetchTodoItemsFromHa();
+          if (!result || result.ok !== true || !Array.isArray(result.items)) {
+            console.warn('todo.get_items reconcile skipped: no valid item payload');
+            return;
+          }
+          syncSelectedMapFromHaTodoItems(result.items);
+          renderLeftList();
+          await saveToJsFile();
+        } catch (err) {
+          console.warn('todo.get_items reconcile failed', err);
+        }
+      }
+
+      function closePopupDialog() {
+        const p = getParentWindow();
+        try {
+          const dlg = p && p.document ? p.document.getElementById('shopping-list-dialog') : null;
+          if (dlg && typeof dlg.close === 'function') {
+            dlg.close();
+            return;
+          }
+        } catch (_) {}
+        try { window.close(); } catch (_) {}
+      }
+
+      function setupPopupCloseUi() {
+        if (popupCloseBtn) popupCloseBtn.style.display = 'none';
+      }
+
+      async function saveToJsFile() {
+        const payload = Array.from(selectedMap.entries()).map(([key, value]) => ({ key, ...value }));
+        const content = 'window.ON_THE_SHOPPING_LIST = ' + JSON.stringify(payload, null, 2) + ';\n';
+
+        const callWebhook = resolveWebhookCaller();
+        const saveDir = resolveSaveDir();
+        if (!saveDir) {
+          console.warn('Shopping list could not be saved: save path could not be resolved.');
+          return;
+        }
+
+        await callWebhook({
+          savingpath: saveDir,
+          filename: LIST_FILE_NAME,
+          content_b64: toBase64(content)
+        });
+      }
+
+      async function loadFromJsFile() {
+        let text = '';
+        try {
+          const url = LIST_FILE_URL + '?v=' + Date.now();
+          const res = await fetch(url, { cache: 'no-store' });
+          if (!res.ok) return;
+          text = await res.text();
+        } catch (_) {
+          return;
+        }
+
+        const match = text.match(/window\.ON_THE_SHOPPING_LIST\s*=\s*(\[[\s\S]*\])\s*;?/);
+        if (!match) return;
+
+        try {
+          const arr = JSON.parse(match[1]);
+          if (!Array.isArray(arr)) return;
+          selectedMap.clear();
+          for (const item of arr) {
+            if (!item || !item.key) continue;
+            selectedMap.set(String(item.key), {
+              icon: String(item.icon || ''),
+              categoryId: String(item.categoryId || ''),
+              label: item.label,
+              haName: String(item.haName || ''),
+              todoItem: String(item.todoItem || ''),
+              extra: String(item.extra ?? item.amountNote ?? item.note ?? '')
+            });
+          }
+        } catch (_) {}
+      }
+
+      function getCatalogItemByKey(key) {
+        return itemIndex.get(String(key || '')) || null;
+      }
+
+      function getLocalizedCategoryTitle(categoryId, fallback) {
+        const c = categoryIndex.get(String(categoryId || ''));
+        const fromCatalog = c ? resolveLangValue(c.title) : '';
+        if (fromCatalog) return fromCatalog;
+        const fb = resolveLangValue(fallback);
+        return fb || t('fallbackCategory');
+      }
+
+      function getLocalizedItemLabel(entryKey, entryValue) {
+        const catalogItem = getCatalogItemByKey(entryKey);
+        const fromCatalog = catalogItem ? resolveLangValue(catalogItem.label) : '';
+        if (fromCatalog) return fromCatalog;
+        const fromEntry = resolveLangValue(entryValue && entryValue.label);
+        return fromEntry || entryKey;
+      }
+
+      function getItemIcon(entryKey, entryValue) {
+        const catalogItem = getCatalogItemByKey(entryKey);
+        if (catalogItem && catalogItem.icon) return catalogItem.icon;
+        if (entryValue && entryValue.icon) return entryValue.icon;
+        return 'mdi:cart-outline';
+      }
+
+      function getItemCategory(entryKey, entryValue) {
+        const catalogItem = getCatalogItemByKey(entryKey);
+        if (catalogItem) {
+          return {
+            id: String(catalogItem.categoryId || ''),
+            title: getLocalizedCategoryTitle(catalogItem.categoryId, catalogItem.categoryTitle)
+          };
+        }
+        return {
+          id: String((entryValue && entryValue.categoryId) || ''),
+          title: getLocalizedCategoryTitle(entryValue && entryValue.categoryId, entryValue && entryValue.categoryTitle)
+        };
+      }
+
+      function updateCount() {
+        const n = selectedMap.size;
+        selectedCount.textContent = n + ' ' + (n === 1 ? t('selectedOne') : t('selectedMany'));
+      }
+
+      function refreshProductButtonStates() {
+        const buttons = accordion.querySelectorAll('.product-btn[data-key]');
+        buttons.forEach(btn => {
+          const key = btn.dataset.key;
+          btn.classList.toggle('active', selectedMap.has(key));
+        });
+      }
+
+      function renderLeftList() {
+        leftList.innerHTML = '';
+        updateCount();
+
+        const entries = Array.from(selectedMap.entries());
+        if (!entries.length) {
+          const empty = document.createElement('div');
+          empty.className = 'empty';
+          empty.textContent = t('empty');
+          leftList.appendChild(empty);
+          refreshProductButtonStates();
+          return;
+        }
+
+        entries.sort((a, b) => {
+          const catA = getItemCategory(a[0], a[1]);
+          const catB = getItemCategory(b[0], b[1]);
+          const idxA = categoryOrder.has(catA.id) ? categoryOrder.get(catA.id) : Number.MAX_SAFE_INTEGER;
+          const idxB = categoryOrder.has(catB.id) ? categoryOrder.get(catB.id) : Number.MAX_SAFE_INTEGER;
+          if (idxA !== idxB) return idxA - idxB;
+          const labelA = getLocalizedItemLabel(a[0], a[1]);
+          const labelB = getLocalizedItemLabel(b[0], b[1]);
+          return labelA.localeCompare(labelB, uiLang);
+        });
+
+        let lastCategory = '';
+        for (const [key, value] of entries) {
+          const category = getItemCategory(key, value);
+          if (category.title !== lastCategory) {
+            const groupTitle = document.createElement('div');
+            groupTitle.className = 'group-title';
+            groupTitle.textContent = category.title;
+            leftList.appendChild(groupTitle);
+            lastCategory = category.title;
+          }
+
+          const row = document.createElement('div');
+          row.className = 'item-row';
+
+          const main = document.createElement('div');
+          main.className = 'item-main';
+
+          const left = document.createElement('div');
+          left.className = 'item-left';
+
+          const icon = document.createElement('iconify-icon');
+          icon.setAttribute('icon', getItemIcon(key, value));
+
+          const txt = document.createElement('div');
+          txt.className = 'item-text';
+          txt.textContent = getLocalizedItemLabel(key, value);
+
+          left.appendChild(icon);
+          left.appendChild(txt);
+
+          const removeBtn = document.createElement('button');
+          removeBtn.className = 'item-remove';
+          removeBtn.type = 'button';
+          removeBtn.textContent = t('remove');
+          removeBtn.addEventListener('click', async () => {
+            if (itemExtraSaveTimers.has(key)) {
+              clearTimeout(itemExtraSaveTimers.get(key));
+              itemExtraSaveTimers.delete(key);
+            }
+            const haName = getHaShoppingName(key, value);
+            selectedMap.delete(key);
+            renderLeftList();
+            try {
+              await removeFromHaShoppingList(haName);
+            } catch (err) {
+              console.warn('HA todo.remove_item failed for', haName, err);
+            }
+            await saveToJsFile();
+          });
+
+          main.appendChild(left);
+          main.appendChild(removeBtn);
+          row.appendChild(main);
+
+          const extraInput = document.createElement('input');
+          extraInput.type = 'text';
+          extraInput.className = 'item-extra-input';
+          extraInput.placeholder = t('itemExtraPlaceholder');
+          extraInput.value = String((value && value.extra) || '');
+          extraInput.addEventListener('input', () => {
+            const entry = selectedMap.get(key);
+            if (!entry) return;
+            const oldTodoItem = String(entry.todoItem || buildTodoItemText(key, entry) || '').trim();
+            entry.extra = String(extraInput.value || '');
+            entry.todoItem = buildTodoItemText(key, entry);
+            selectedMap.set(key, entry);
+            if (itemExtraSaveTimers.has(key)) clearTimeout(itemExtraSaveTimers.get(key));
+            const newTodoItem = String(entry.todoItem || '').trim();
+            const timer = setTimeout(async () => {
+              itemExtraSaveTimers.delete(key);
+              if (oldTodoItem && newTodoItem && oldTodoItem !== newTodoItem) {
+                try { await removeFromHaShoppingList(oldTodoItem); } catch (err) { console.warn('HA todo.remove_item failed for', oldTodoItem, err); }
+                try { await addToHaShoppingList(newTodoItem); } catch (err) { console.warn('HA todo.add_item failed for', newTodoItem, err); }
+              }
+              void saveToJsFile();
+            }, 300);
+            itemExtraSaveTimers.set(key, timer);
+          });
+          row.appendChild(extraInput);
+
+          leftList.appendChild(row);
+        }
+
+        refreshProductButtonStates();
+      }
+
+      function buildExportGroups() {
+        const groups = new Map();
+        for (const [key, value] of selectedMap.entries()) {
+          const category = getItemCategory(key, value);
+          const categoryTitle = String(category && category.title ? category.title : t('fallbackCategory')).trim() || t('fallbackCategory');
+          const row = {
+            key,
+            icon: getItemIcon(key, value),
+            label: getLocalizedItemLabel(key, value),
+            extra: String((value && value.extra) || '').trim()
+          };
+          if (!groups.has(categoryTitle)) groups.set(categoryTitle, []);
+          groups.get(categoryTitle).push(row);
+        }
+
+        const out = Array.from(groups.entries()).map(([categoryTitle, items]) => {
+          items.sort((a, b) => String(a.label || '').localeCompare(String(b.label || ''), uiLang));
+          return { categoryTitle, items };
+        });
+        out.sort((a, b) => String(a.categoryTitle || '').localeCompare(String(b.categoryTitle || ''), uiLang));
+        return out;
+      }
+
+      function buildExportHtml(groups, options = {}) {
+        const pdfHint = options.pdfHint === true;
+        const created = new Date().toLocaleString(uiLang === 'de' ? 'de-DE' : (uiLang === 'ja' ? 'ja-JP' : 'en-US'));
+        const rowsHtml = groups.map(group => {
+          const rows = group.items.map(item => {
+            const lineText = item.extra
+              ? `${String(item.label || item.key)} - ${String(item.extra)}`
+              : String(item.label || item.key);
+            return [
+              '<li class="export-item">',
+              `<span class="export-item-icon"><iconify-icon icon="${escapeHtml(item.icon || 'mdi:cart-outline')}"></iconify-icon></span>`,
+              `<span class="export-item-line">${escapeHtml(lineText)}</span>`,
+              '</li>'
+            ].join('');
+          }).join('');
+          return [
+            '<section class="export-group">',
+            `<h2>${escapeHtml(group.categoryTitle)}</h2>`,
+            `<ul class="export-list">${rows}</ul>`,
+            '</section>'
+          ].join('');
+        }).join('');
+
+        return [
+          '<!doctype html>',
+          `<html lang="${escapeHtml(uiLang)}">`,
+          '<head>',
+          '<meta charset="utf-8" />',
+          '<meta name="viewport" content="width=device-width, initial-scale=1" />',
+          `<title>${escapeHtml(t('exportTitle'))}</title>`,
+          '<script src="https://code.iconify.design/iconify-icon/2.1.0/iconify-icon.min.js"><\/script>',
+          '<style>',
+          'body{font-family:Segoe UI,Arial,sans-serif;color:#111;margin:18px;}',
+          'h1{margin:0 0 6px;font-size:20px;}',
+          '.meta{color:#444;font-size:11px;margin-bottom:4px;}',
+          '.hint{font-size:11px;color:#444;margin:0 0 8px;}',
+          '.export-columns{column-count:3;column-gap:16px;column-fill:auto;}',
+          '.export-group{margin:0 0 8px;break-inside:auto;}',
+          '.export-group h2{margin:0 0 4px;font-size:12px;border-bottom:1px solid #ddd;padding-bottom:2px;}',
+          '.export-list{list-style:none;margin:0;padding:0;}',
+          '.export-item{display:flex;align-items:flex-start;gap:6px;font-size:11px;line-height:1.2;margin:0 0 3px;break-inside:avoid;}',
+          '.export-item-icon{width:16px;min-width:16px;max-width:16px;display:inline-flex;justify-content:center;align-items:center;line-height:1;}',
+          '.export-item-icon iconify-icon{font-size:14px;}',
+          '.export-item-line{min-width:0;word-break:break-word;overflow-wrap:anywhere;}',
+          '@media print{body{margin:10mm;} .hint{display:none;} .export-columns{column-count:3;column-gap:14px;}}',
+          '@media (max-width:900px){.export-columns{column-count:1;}}',
+          '</style>',
+          '</head>',
+          '<body>',
+          `<h1>${escapeHtml(t('exportTitle'))}</h1>`,
+          `<div class="meta">${escapeHtml(t('exportCreated'))}: ${escapeHtml(created)}</div>`,
+          pdfHint ? `<div class="hint">${escapeHtml(t('exportHintPdf'))}</div>` : '',
+          `<div class="export-columns">${rowsHtml}</div>`,
+          '<script>window.addEventListener(\"load\",()=>{setTimeout(()=>window.print(),120);});<\/script>',
+          '</body>',
+          '</html>'
+        ].join('');
+      }
+
+      function runExport(options = {}) {
+        const groups = buildExportGroups();
+        if (!groups.length) {
+          alert(t('exportEmpty'));
+          return;
+        }
+        const html = buildExportHtml(groups, { pdfHint: options.pdfHint === true });
+        try {
+          const blob = new Blob([html], { type: 'text/html;charset=utf-8' });
+          const url = URL.createObjectURL(blob);
+          const w = window.open(url, '_blank');
+          if (!w) throw new Error('popup blocked');
+          setTimeout(() => URL.revokeObjectURL(url), 60 * 1000);
+          return;
+        } catch (_) {}
+
+        const w = window.open('about:blank', '_blank');
+        if (!w) return;
+        try {
+          w.document.open();
+          w.document.write(html);
+          w.document.close();
+        } catch (_) {}
+      }
+
+      async function toggleCatalogItem(item, category) {
+        const key = normalizeKey(item.id || resolveLangValue(item.label));
+        if (!key) return;
+
+        if (selectedMap.has(key)) {
+          const existing = selectedMap.get(key);
+          const haName = getHaShoppingName(key, existing);
+          selectedMap.delete(key);
+          try {
+            await removeFromHaShoppingList(haName);
+          } catch (err) {
+            console.warn('HA todo.remove_item failed for', haName, err);
+          }
+        } else {
+          const haName = String(resolveLangValue(item.label) || item.id || key).trim();
+          const nextValue = {
+            icon: String(item.icon || ''),
+            categoryId: String(category.id || ''),
+            label: item.label || '',
+            haName,
+            extra: ''
+          };
+          nextValue.todoItem = buildTodoItemText(key, nextValue);
+          selectedMap.set(key, {
+            ...nextValue
+          });
+          try {
+            await addToHaShoppingList(nextValue.todoItem);
+          } catch (err) {
+            console.warn('HA todo.add_item failed for', nextValue.todoItem, err);
+          }
+        }
+
+        renderLeftList();
+        await saveToJsFile();
+      }
+
+      function getFilteredCatalog(groups, rawTerm) {
+        const term = normalizeSearch(rawTerm);
+        const foodTerm = normalizeFoodSearch(rawTerm);
+        if (!term) return groups || [];
+
+        const filtered = [];
+        (groups || []).forEach(category => {
+          if (!category || !Array.isArray(category.items)) return;
+
+          const categoryText = normalizeSearch(resolveLangValue(category.title));
+          const items = category.items.filter(item => {
+            if (!item) return false;
+            const terms = collectItemSearchTerms(item);
+            const searchable = terms.map(t => normalizeSearch(t));
+            const foodSearchable = terms.map(t => normalizeFoodSearch(t));
+            return (
+              categoryText.includes(term) ||
+              searchable.some(t => t && t.includes(term)) ||
+              (foodTerm && foodSearchable.some(t => t && t.includes(foodTerm)))
+            );
+          });
+
+          if (items.length) filtered.push({ ...category, items });
+        });
+
+        return filtered;
+      }
+
+      function countCatalogItems(groups) {
+        return (groups || []).reduce((sum, c) => sum + ((c && Array.isArray(c.items)) ? c.items.length : 0), 0);
+      }
+
+      function updateCustomAddUi(rawSearchTerm, filteredGroups) {
+        if (!customAddWrap || !customAddInput) return;
+        const searchTerm = String(rawSearchTerm || '').trim();
+        const hasTerm = Boolean(searchTerm);
+        const hasResults = countCatalogItems(filteredGroups) > 0;
+        const shouldShow = hasTerm && !hasResults;
+        customAddWrap.classList.toggle('show', shouldShow);
+        if (!shouldShow) return;
+        if (!customAddInput.value.trim() || customAddInput.dataset.autoFill === '1') {
+          customAddInput.value = searchTerm;
+          customAddInput.dataset.autoFill = '1';
+        }
+      }
+
+      async function addCustomSelectedEntry(rawLabel) {
+        const label = String(rawLabel || '').trim();
+        if (!label) return;
+
+        const targetNorm = normalizeSearch(label);
+        for (const [key, value] of selectedMap.entries()) {
+          if (normalizeSearch(getHaShoppingName(key, value)) === targetNorm) return;
+        }
+
+        const key = uniqueEntryKey(label, new Set(selectedMap.keys()));
+        const nextValue = {
+          icon: 'mdi:cart-outline',
+          categoryId: 'misc',
+          label: { de: label, en: label, ja: label },
+          haName: label,
+          extra: ''
+        };
+        nextValue.todoItem = buildTodoItemText(key, nextValue);
+        selectedMap.set(key, { ...nextValue });
+
+        try {
+          await addToHaShoppingList(nextValue.todoItem);
+        } catch (err) {
+          console.warn('HA todo.add_item failed for', nextValue.todoItem, err);
+        }
+        renderLeftList();
+        await saveToJsFile();
+      }
+
+      function renderCatalogFromSearch() {
+        const searchTerm = catalogSearchInput ? catalogSearchInput.value : '';
+        const filtered = getFilteredCatalog(catalogGroups, searchTerm);
+        updateCustomAddUi(searchTerm, filtered);
+        renderCatalog(sortCatalogCategories(filtered), { forceOpen: Boolean(normalizeSearch(searchTerm)) });
+      }
+
+      function renderCatalog(groups, options = {}) {
+        accordion.innerHTML = '';
+        categoryOrder.clear();
+        itemIndex.clear();
+        categoryIndex.clear();
+
+        (groups || []).forEach((category, idx) => {
+          if (!category || !Array.isArray(category.items)) return;
+          const categoryId = String(category.id || 'cat_' + idx);
+          categoryIndex.set(categoryId, category);
+          categoryOrder.set(categoryId, idx);
+
+          const details = document.createElement('details');
+          details.open = options.forceOpen ? true : idx < 3;
+
+          const summary = document.createElement('summary');
+          summary.textContent = resolveLangValue(category.title) || t('fallbackCategory');
+
+          const grid = document.createElement('div');
+          grid.className = 'product-grid';
+
+          category.items.forEach((item, itemIdx) => {
+            if (!item) return;
+            const itemId = normalizeKey(item.id || resolveLangValue(item.label) || (categoryId + '_' + itemIdx));
+            const label = resolveLangValue(item.label);
+            if (!label) return;
+
+            itemIndex.set(itemId, {
+              ...item,
+              id: itemId,
+              categoryId,
+              categoryTitle: category.title
+            });
+
+            const btn = document.createElement('button');
+            btn.type = 'button';
+            btn.className = 'product-btn';
+            btn.dataset.key = itemId;
+
+            const icon = document.createElement('iconify-icon');
+            icon.setAttribute('icon', item.icon || 'mdi:cart-outline');
+            const txt = document.createElement('span');
+            txt.className = 'txt';
+            txt.textContent = label;
+
+            btn.appendChild(icon);
+            btn.appendChild(txt);
+            btn.addEventListener('click', () => { toggleCatalogItem({ ...item, id: itemId }, { ...category, id: categoryId }); });
+            grid.appendChild(btn);
+          });
+
+          details.appendChild(summary);
+          details.appendChild(grid);
+          accordion.appendChild(details);
+        });
+
+        refreshProductButtonStates();
+      }
+
+      async function loadCatalog() {
+        try {
+          const res = await fetch(CATALOG_JSON_PATH, { cache: 'no-store' });
+          if (!res.ok) throw new Error('catalog not found');
+          const data = await res.json();
+          const categories = Array.isArray(data && data.categories) ? data.categories : null;
+          catalogGroups = sortCatalogCategories(categories || []);
+        } catch (_) {
+          catalogGroups = [];
+        }
+      }
+
+      function applyUiLanguage() {
+        selectedTitleEl.textContent = t('selectedTitle');
+        catalogTitleEl.textContent = t('catalogTitle');
+        catalogSubEl.textContent = t('catalogSub');
+        if (catalogSearchInput) catalogSearchInput.placeholder = t('searchPlaceholder');
+        if (customAddTitle) customAddTitle.textContent = t('customAddTitle');
+        if (customAddInput) customAddInput.placeholder = t('customAddPlaceholder');
+        if (customAddBtn) customAddBtn.textContent = t('customAddButton');
+        if (exportPrintLabel) exportPrintLabel.textContent = t('exportPrint');
+        if (exportPdfLabel) exportPdfLabel.textContent = t('exportPdf');
+        clearListBtn.textContent = t('clear');
+        langToggleBtn.textContent = uiLang.toUpperCase();
+        if (HOSTED_BY_TASKBOARD) {
+          langToggleBtn.disabled = true;
+          langToggleBtn.title = 'Sprache aus Hauptansicht';
+        } else {
+          langToggleBtn.disabled = false;
+          langToggleBtn.title = 'Language / Sprache / 言語';
+        }
+      }
+
+      clearListBtn.addEventListener('click', async () => {
+        const names = Array.from(selectedMap.entries()).map(([key, value]) => getHaShoppingName(key, value)).filter(Boolean);
+        selectedMap.clear();
+        renderLeftList();
+        for (const name of names) {
+          try {
+            await removeFromHaShoppingList(name);
+          } catch (err) {
+            console.warn('HA todo.remove_item failed for', name, err);
+          }
+        }
+        await saveToJsFile();
+      });
+
+      if (catalogSearchInput) {
+        catalogSearchInput.addEventListener('input', () => {
+          renderCatalogFromSearch();
+        });
+      }
+      customAddInput?.addEventListener('input', () => {
+        customAddInput.dataset.autoFill = '0';
+      });
+      customAddInput?.addEventListener('keydown', async (ev) => {
+        if (ev.key !== 'Enter') return;
+        ev.preventDefault();
+        await addCustomSelectedEntry(customAddInput.value);
+      });
+      customAddBtn?.addEventListener('click', async () => {
+        await addCustomSelectedEntry(customAddInput ? customAddInput.value : '');
+      });
+      exportPrintBtn?.addEventListener('click', () => runExport({ pdfHint: false }));
+      exportPdfBtn?.addEventListener('click', () => runExport({ pdfHint: true }));
+
+      langToggleBtn.addEventListener('click', () => {
+        if (HOSTED_BY_TASKBOARD) return;
+        const idx = Math.max(0, LANG_ORDER.indexOf(uiLang));
+        uiLang = LANG_ORDER[(idx + 1) % LANG_ORDER.length];
+        try { localStorage.setItem(LOCAL_LANG_KEY, uiLang); } catch (_) {}
+        applyUiLanguage();
+        renderCatalogFromSearch();
+        renderLeftList();
+      });
+
+      uiLang = detectLang();
+      applyUiLanguage();
+      bindMainLangSync();
+      setupPopupCloseUi();
+
+      loadCatalog().then(async () => {
+        renderCatalogFromSearch();
+        await loadFromJsFile();
+        await reconcileFromHaTodoList();
+        renderLeftList();
+        syncLangFromMain({ rerender: true });
+      });
+    })();
+  </script>
+</body>
+</html>
