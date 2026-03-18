@@ -1,4 +1,6 @@
 # Remey's Taskboard - Version 3
+> Note: AI Codex was used in this project as support to get started faster. I usually know what I want to achieve with code and also how I can get there with code, but not always where to start in the project, how to use all Home Assistant related integrations like `calendar.*`, `todo.*`, or `weather.*`, or how to approach some CSS styling. AI support helped with those starting points, and then the final solution was worked out step by step through testing and trial and error. This is a hobby project, and in that context I think it is fair to use AI as a form of support. I share the results freely and keep the code visible because I value the community and open-source mindset, have taken inspiration from other projects myself, and appreciate it when others make their code available too.
+
 
 A Home Assistant web app bundle with:
 - `index_mainview.html` (main board)
