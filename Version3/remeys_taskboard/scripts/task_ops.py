@@ -125,7 +125,8 @@ def write_js_array_only(path: str, raw: str, start: int, end: int, rows: List[Di
 
 def find_task_index(rows: List[Dict[str, Any]], uid: str) -> int:
     for i, row in enumerate(rows):
-        if str(row.get("__uid") or "").strip() == uid:
+        row_uid = str(row.get("uid") or row.get("__uid") or row.get("_uuid") or "").strip()
+        if row_uid == uid:
             return i
     return -1
 
@@ -247,23 +248,25 @@ def shift_to_allowed_date(d: datetime, month_mask: Any, week_mask: Any) -> datet
 def normalize_task_payload(raw: Any) -> Dict[str, Any]:
     row = safe_obj(raw)
     out = dict(row)
-    out["__uid"] = ensure_uid(out.get("__uid"))
+    out["uid"] = ensure_uid(out.get("uid") or out.get("__uid") or out.get("_uuid"))
+    out.pop("__uid", None)
+    out.pop("_uuid", None)
     return out
 
 
 def op_add_task(rows: List[Dict[str, Any]], payload: Dict[str, Any]) -> Dict[str, Any]:
     task = normalize_task_payload(payload.get("task"))
-    uid = str(task.get("__uid") or "").strip()
+    uid = str(task.get("uid") or "").strip()
     if find_task_index(rows, uid) >= 0:
-        fail(f"Task with __uid already exists: {uid}")
+        fail(f"Task with uid already exists: {uid}")
     rows.append(task)
     return {"task": task}
 
 
 def op_edit_task(rows: List[Dict[str, Any]], payload: Dict[str, Any]) -> Dict[str, Any]:
-    target = str(payload.get("target_id") or payload.get("__uid") or "").strip()
+    target = str(payload.get("target_id") or payload.get("uid") or payload.get("__uid") or payload.get("_uuid") or "").strip()
     if not target:
-        fail("edit_task requires target_id or __uid.")
+        fail("edit_task requires target_id or uid.")
     idx = find_task_index(rows, target)
     if idx < 0:
         fail(f"Task not found: {target}")
@@ -277,23 +280,25 @@ def op_edit_task(rows: List[Dict[str, Any]], payload: Dict[str, Any]) -> Dict[st
     else:
         updated = dict(existing)
         updated.update(patch)
-        updated["__uid"] = ensure_uid(updated.get("__uid") or target)
+        updated["uid"] = ensure_uid(updated.get("uid") or updated.get("__uid") or updated.get("_uuid") or target)
+        updated.pop("__uid", None)
+        updated.pop("_uuid", None)
 
-    new_uid = str(updated.get("__uid") or "").strip()
+    new_uid = str(updated.get("uid") or "").strip()
     if not new_uid:
-        fail("Edited task must contain __uid.")
+        fail("Edited task must contain uid.")
     other = find_task_index(rows, new_uid)
     if other >= 0 and other != idx:
-        fail(f"Task __uid collision: {new_uid}")
+        fail(f"Task uid collision: {new_uid}")
 
     rows[idx] = updated
     return {"task": updated}
 
 
 def op_delete_task(rows: List[Dict[str, Any]], payload: Dict[str, Any]) -> Dict[str, Any]:
-    target = str(payload.get("target_id") or payload.get("__uid") or "").strip()
+    target = str(payload.get("target_id") or payload.get("uid") or payload.get("__uid") or payload.get("_uuid") or "").strip()
     if not target:
-        fail("delete_task requires target_id or __uid.")
+        fail("delete_task requires target_id or uid.")
     idx = find_task_index(rows, target)
     if idx < 0:
         fail(f"Task not found: {target}")
@@ -302,9 +307,9 @@ def op_delete_task(rows: List[Dict[str, Any]], payload: Dict[str, Any]) -> Dict[
 
 
 def op_get_task(rows: List[Dict[str, Any]], payload: Dict[str, Any]) -> Dict[str, Any]:
-    target = str(payload.get("target_id") or payload.get("__uid") or "").strip()
+    target = str(payload.get("target_id") or payload.get("uid") or payload.get("__uid") or payload.get("_uuid") or "").strip()
     if not target:
-        fail("get_task requires target_id or __uid.")
+        fail("get_task requires target_id or uid.")
     idx = find_task_index(rows, target)
     if idx < 0:
         fail(f"Task not found: {target}")
@@ -312,9 +317,9 @@ def op_get_task(rows: List[Dict[str, Any]], payload: Dict[str, Any]) -> Dict[str
 
 
 def op_mark_done(rows: List[Dict[str, Any]], payload: Dict[str, Any]) -> Dict[str, Any]:
-    target = str(payload.get("target_id") or payload.get("__uid") or payload.get("task_uuid") or "").strip()
+    target = str(payload.get("target_id") or payload.get("uid") or payload.get("__uid") or payload.get("_uuid") or payload.get("task_uid") or payload.get("task_uuid") or "").strip()
     if not target:
-        fail("mark_done requires task_uuid/target_id.")
+        fail("mark_done requires task_uid/target_id.")
     idx = find_task_index(rows, target)
     if idx < 0:
         fail(f"Task not found: {target}")
