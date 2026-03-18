@@ -1,4 +1,4 @@
-# Remey's Taskboard
+# Remey's Taskboard - Version 3
 
 A Home Assistant web app bundle with:
 - `index_mainview.html` (main board)
