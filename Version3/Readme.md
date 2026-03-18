@@ -40,7 +40,7 @@ Shell commands and automations used by the backend package (`packages/taskboard_
 - `shell_command.taskboard_textcontentfile_save` (generic file save from base64 payload)
 - `shell_command.taskboard_task_operation` (tasklist operations via `scripts/task_ops.py`)
 - `shell_command.taskboard_product_catalog_operation` (catalog operations via `scripts/product_catalog_ops.py`)
-- `shell_command.taskboard_mark_done_task` (mark one task done via UUID/assignee)
+- `shell_command.taskboard_mark_done_task` (mark one task done via U/assignee)
 - `shell_command.taskboard_due_digest` (runs `scripts/taskboard_due_digest_script.py`)
 - Automation `taskboard_textcontentfile_export` (`Webhook: remey_taskboard_file_export`)
 - Automation `taskboard_due_digest_webhook_notify` (`Taskboard: Due Digest Webhook -> Device`)
@@ -248,7 +248,7 @@ General setup idea:
 3. Pass the `__uid` of the related task from the task list in the command template.
 
 Where to find the `__uid`:
-- Open the task in the editor; the `_uid`/ID label is shown at the top of the popup editor form.
+- Open the task in the editor; the `__uid`/ID label is shown at the top of the popup editor form.
 
 ### Feature Requests
 
