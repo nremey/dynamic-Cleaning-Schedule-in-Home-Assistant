@@ -29,10 +29,10 @@ shell_command:
     sh -c 'dir="$1";
     script="$dir/scripts/task_ops.py";
     [ -f "$script" ] || script="$dir/../scripts/task_ops.py";
-    payload="$(printf "{\"task_uuid\":\"%s\",\"assignee\":\"%s\"}" "$2" "$3" | base64 | tr -d "\n")";
+    payload="$(printf "{\"task_uid\":\"%s\",\"assignee\":\"%s\"}" "$2" "$3" | base64 | tr -d "\n")";
     python3 "$script" "$1" "$4" "mark_done" "$payload"' --
     "{{ path }}"
-    "{{ task_uuid }}"
+    "{{ task_uid }}"
     "{{ assignee }}"
     "{{ filename }}"
 
