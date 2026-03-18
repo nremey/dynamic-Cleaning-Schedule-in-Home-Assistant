@@ -246,7 +246,7 @@ General setup idea:
 3. Pass the `__uid` of the related task from the task list in the command template.
 
 Where to find the `__uid`:
-- Open the task in the editor; the `_uuid`/ID label is shown at the top of the popup editor form.
+- Open the task in the editor; the `_uid`/ID label is shown at the top of the popup editor form.
 
 ### Feature Requests
 
