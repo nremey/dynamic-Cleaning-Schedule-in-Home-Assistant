@@ -251,36 +251,67 @@
           }
         }
 
-        function reloadUpdatedScriptAndRender(){
+        function parseTaskboardDataFile(text){
+          const source = String(text || '');
+          if (!source.trim()) return [];
+          try {
+            const sandbox = { PP_TASKS_DATA: undefined, TABLE_DATA: undefined };
+            const fn = new Function(
+              'window',
+              `${source}\nreturn Array.isArray(window.PP_TASKS_DATA) ? window.PP_TASKS_DATA : (Array.isArray(window.TABLE_DATA) ? window.TABLE_DATA : []);`
+            );
+            const parsed = fn(sandbox);
+            return Array.isArray(parsed) ? parsed : [];
+          } catch (err) {
+            console.debug('tasklist.js konnte nicht geparst werden.', err);
+            return null;
+          }
+        }
+
+        function clearLocalTaskShadowState(){
+          try { localStorage.removeItem('pp-overrides'); } catch {}
+          try { localStorage.removeItem('pp-added'); } catch {}
+        }
+
+        let __ppReloadPromise = null;
+        async function reloadUpdatedScriptAndRender(){
           if(window.__ppExportInProgress) return;
           if (window.__ppHasUnsavedChanges) {
             doExport('auto-reload');
             return;
           }
-
-          const old = document.getElementById('tasklist-js');
-          const fresh = document.createElement('script');
-          fresh.id = 'tasklist-js';
-
-          const abs = new URL(window.BASE_PATH + "userdata/tasklist.js", getHaOrigin()).toString();
-          fresh.src = abs + '?v=' + Date.now();
-
-          fresh.onload = () => {
-            if (Array.isArray(window.TABLE_DATA)) {
-              window.PP_TASKS_DATA = cloneTaskboardData(window.TABLE_DATA);
+          if (__ppReloadPromise) return __ppReloadPromise;
+          __ppReloadPromise = (async ()=>{
+            const abs = new URL(window.BASE_PATH + "userdata/tasklist.js", getHaOrigin()).toString();
+            try {
+              const res = await fetch(abs + '?v=' + Date.now(), {
+                cache: 'no-store',
+                headers: { 'Cache-Control': 'no-cache, no-store, max-age=0', 'Pragma': 'no-cache' }
+              });
+              if (!res.ok) throw new Error(`HTTP ${res.status}`);
+              const text = await res.text();
+              const parsed = parseTaskboardDataFile(text);
+              if (!Array.isArray(parsed)) throw new Error('Invalid task data payload');
+              clearLocalTaskShadowState();
+              window.PP_TASKS_DATA = cloneTaskboardData(parsed);
+              window.ppRender?.();
+            } catch (err) {
+              console.debug('tasklist.js konnte nicht frisch geladen werden.', err);
+            } finally {
+              __ppReloadPromise = null;
             }
-            window.ppRender?.();
-          };
-          fresh.onerror = () => { console.debug('tasklist.js konnte nicht geladen werden.'); };
-
-          if (old) old.replaceWith(fresh);
-          else document.head.appendChild(fresh);
+          })();
+          return __ppReloadPromise;
         }
 
         function startReloadLoop(){
           reloadUpdatedScriptAndRender();
           setInterval(reloadUpdatedScriptAndRender, window.PP_TASKLIST_RELOAD_MS);
           window.addEventListener('focus', reloadUpdatedScriptAndRender);
+          window.addEventListener('pageshow', reloadUpdatedScriptAndRender);
+          document.addEventListener('visibilitychange', ()=>{
+            if (!document.hidden) reloadUpdatedScriptAndRender();
+          });
         }
         if (document.readyState === 'loading') {
           window.addEventListener('DOMContentLoaded', startReloadLoop, { once:true });
@@ -7406,8 +7437,20 @@ window.PP_LOAD_THEME_CSS = loadUserThemeCss;
 
       // ===== Utils =====
       const addDays    = (d, n)=>{ const x = new Date(d); x.setDate(x.getDate()+Number(n||0)); return x; };
-      const today      = ()=>{ const tt=new Date(); return new Date(tt.getFullYear(), tt.getMonth(), tt.getDate()); };
-      const diffInDays = (a,b)=> Math.round((a - b) / 86400000);
+      function normalizeDateOnly(value){
+      	if (value == null || value === '') return null;
+      	const raw = value instanceof Date ? new Date(value.getTime()) : new Date(value);
+      	if (Number.isNaN(raw.getTime())) return null;
+      	raw.setHours(0,0,0,0);
+      	return raw;
+      }
+      const today      = ()=> normalizeDateOnly(new Date());
+      const diffInDays = (a,b)=>{
+      	const da = normalizeDateOnly(a);
+      	const db = normalizeDateOnly(b);
+      	if (!da || !db) return NaN;
+      	return Math.round((da.getTime() - db.getTime()) / 86400000);
+      };
       const fmtDate    = (str) => { const d = parseDate(str); if(!d) return '—'; return new Intl.DateTimeFormat(lang==='de'?'de-DE':'en-US',{ year:'numeric', month:'2-digit', day:'2-digit'}).format(d); };
       const cssId      = (s)=> String(s).toLowerCase().replace(/[^a-z0-9]+/g,'-').replace(/(^-|-$)/g,'');
       const escapeHtml = (str)=> String(str)
@@ -8279,7 +8322,8 @@ window.PP_LOAD_THEME_CSS = loadUserThemeCss;
 	
 	function parseDate(str){
 		if(!str) return null;
-		const [y,m,d] = String(str).split('-').map(Number);
+		const normalized = String(str).trim().slice(0, 10);
+		const [y,m,d] = normalized.split('-').map(Number);
 		if(!y || !m || !d) return null;
 		const dt = new Date(y, m-1, d);
 		dt.setHours(0,0,0,0);
@@ -9155,7 +9199,19 @@ function accentClassFromEntityStatus(status){
     default:        return 'imp-purple';
   }
 }
-   function markDoneById(id){
+   async function persistTaskMutation(row, reason){
+    try {
+      if (window.PP_TASKS_API && typeof window.PP_TASKS_API.edit_task === 'function' && row?.uid) {
+        await window.PP_TASKS_API.edit_task(row.uid, { task: row });
+        return;
+      }
+    } catch (err) {
+      console.error('task mutation sync failed, fallback to full export', err);
+    }
+    await doExport(reason);
+   }
+
+   async function markDoneById(id){
     const rowsAll = Array.isArray(window.PP_TASKS_DATA) ? window.PP_TASKS_DATA : [];
     const idx = rowsAll.findIndex(r=> r.uid === id);
     if(idx < 0) return;
@@ -9207,11 +9263,11 @@ function accentClassFromEntityStatus(status){
     	};
     	setOverrides(ov);
     	render();
-    	scheduleExport('mark-done');
+    	await persistTaskMutation(r, 'mark-done');
     }
     
 
-   function setDueDateById(id, targetDate){
+   async function setDueDateById(id, targetDate){
    const rowsAll = Array.isArray(window.PP_TASKS_DATA) ? window.PP_TASKS_DATA : [];
    const idx = rowsAll.findIndex(r=> r.uid === id);
    if (idx < 0) return;
@@ -9239,10 +9295,10 @@ function accentClassFromEntityStatus(status){
     	};
     	setOverrides(ov);
     	render();
-    	scheduleExport('drag-drop');
+    	await persistTaskMutation(r, 'drag-drop');
     }
 
-   function setTaskDateTimeById(id, targetDate, startMinutes){
+   async function setTaskDateTimeById(id, targetDate, startMinutes){
    const rowsAll = Array.isArray(window.PP_TASKS_DATA) ? window.PP_TASKS_DATA : [];
    const idx = rowsAll.findIndex(r=> r.uid === id);
    if (idx < 0) return;
@@ -9281,7 +9337,7 @@ function accentClassFromEntityStatus(status){
     	};
     	setOverrides(ov);
     	render();
-    	scheduleExport('family-time-drag');
+    	await persistTaskMutation(r, 'family-time-drag');
     }
 
     // ===== Card =====
