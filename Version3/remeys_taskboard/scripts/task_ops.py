@@ -33,6 +33,48 @@ def ensure_uid(value: str = "") -> str:
     return f"task_{seed}_{tail}"
 
 
+def strip_trailing_commas(raw: str) -> str:
+    out: List[str] = []
+    in_string = False
+    esc = False
+    quote = ""
+    i = 0
+    n = len(raw)
+
+    while i < n:
+        ch = raw[i]
+        if in_string:
+            out.append(ch)
+            if esc:
+                esc = False
+            elif ch == "\\":
+                esc = True
+            elif ch == quote:
+                in_string = False
+            i += 1
+            continue
+
+        if ch in ('"', "'"):
+            in_string = True
+            quote = ch
+            out.append(ch)
+            i += 1
+            continue
+
+        if ch == ",":
+            j = i + 1
+            while j < n and raw[j].isspace():
+                j += 1
+            if j < n and raw[j] in ("]", "}"):
+                i += 1
+                continue
+
+        out.append(ch)
+        i += 1
+
+    return "".join(out)
+
+
 def parse_js_table_assignment(raw: str) -> Tuple[int, int, List[Dict[str, Any]], str]:
     m = ASSIGNMENT_RE.search(raw)
     if not m:
@@ -74,7 +116,7 @@ def parse_js_table_assignment(raw: str) -> Tuple[int, int, List[Dict[str, Any]],
     else:
         fail("Could not find matching closing bracket for task array.")
 
-    arr_src = raw[start:end]
+    arr_src = strip_trailing_commas(raw[start:end])
     try:
         arr = json.loads(arr_src)
     except Exception as exc:
